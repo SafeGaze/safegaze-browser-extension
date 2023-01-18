@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Halalz visual filter browser extension",
+  "version": "1.0.0",
+  "description": "Halalz visual filter browser extension",
+  "background": {
+    "service_worker": "js/background.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_icon": {
+      "16": "images/favicon-16x16.png",
+      "24": "images/favicon-32x32.png",
+      "32": "images/favicon-32x32.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/content-script.js"]
+    }
+  ]
+}
