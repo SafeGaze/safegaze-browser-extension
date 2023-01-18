@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halalz visual filter browser extension</title>
+
+    <script src="js/tailwind.min.js"></script>
+    <script src="js/jquery-3.6.3.min.js"></script>
+  </head>
+  <body>
+    <header class="text-center p-5 bg-slate-200">
+      <h1 class="text-3xl font-bold">
+        Halalz visual filter browser extension settings
+      </h1>
+    </header>
+
+    <main class="max-w-lg mx-auto p-3">
+      <form id="settings-form">
+        <label for="name" class="text-xl">Name:</label>
+        <input type="text" id="name" name="name" class="border w-full p-2" />
+        <input
+          type="submit"
+          value="Submit"
+          class="bg-slate-200 p-3 font-bold text-lg mt-2 w-[120px] cursor-pointer"
+        />
+      </form>
+    </main>
+
+    <script src="js/options.js"></script>
+  </body>
+</html>
