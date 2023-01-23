@@ -1,4 +1,5 @@
 import { halalzSettings } from "./database.js";
+import { processImage, getBase64FromUrl } from "./utils.js";
 
 chrome.action.onClicked.addListener(() => {
   if (chrome.runtime.openOptionsPage) {
@@ -16,6 +17,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "getSettings") {
     halalzSettings.get(request.settingskey).then((data) => {
       sendResponse(data);
+    });
+    return true;
+  }
+
+  if (request.type === "processImage") {
+    getBase64FromUrl(request.imgUrl, request.isBase64Img).then((result) => {
+      sendResponse(result);
     });
     return true;
   }
