@@ -1,8 +1,12 @@
 const isInViewport = function (elem) {
   const bounding = elem.getBoundingClientRect();
   return (
-    bounding.top <=
-    (window.innerHeight || document.documentElement.clientHeight)
+    bounding.top >= 0 &&
+    bounding.left >= 0 &&
+    bounding.right <=
+      (window.innerWidth || document.documentElement.clientWidth) &&
+    bounding.bottom <=
+      (window.innerHeight || document.documentElement.clientHeight)
   );
 };
 const isBase64Img = (imgSrc) => {
@@ -10,11 +14,16 @@ const isBase64Img = (imgSrc) => {
 };
 
 const replaceImages = () => {
-  const getAllImgs = document.getElementsByTagName("img") || [];
-
+  const getAllImgs = document.querySelectorAll("img:not(.loading)") || [];
   for (const img of getAllImgs) {
     const imgUrl = img.src;
+
+    if (isBase64Img(imgUrl) || !img.src) {
+      continue;
+    }
+
     if (isInViewport(img)) {
+      img.classList.add("loading");
       chrome.runtime.sendMessage(
         {
           type: "processImage",
@@ -23,13 +32,13 @@ const replaceImages = () => {
         },
         (response) => {
           img.src = response;
-          img.classList.add("added-masking");
+          img.classList.remove("loading");
         }
       );
-    } else {
-      break;
     }
   }
 };
 
 replaceImages();
+
+document.addEventListener("scroll", replaceImages);
