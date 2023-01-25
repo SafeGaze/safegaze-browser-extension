@@ -18,19 +18,37 @@ export const processImage = (url, is_base64) => {
   });
 };
 
-export const getBase64FromUrl = async (url, is_base64) => {
-  const data = await fetch(url);
-  const blob = await data.blob();
-  return new Promise((resolve) => {
-    if (is_base64 === true) {
-      resolve(url);
-    }
-
+function blobToBase64(blob) {
+  return new Promise((resolve, _) => {
     const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
     reader.readAsDataURL(blob);
-    reader.onloadend = () => {
-      const base64data = reader.result;
-      resolve(base64data);
-    };
   });
+}
+
+export const getBase64FromUrl = async (url, is_base64) => {
+
+  // console.log("getBase64FromUrl", url, is_base64);
+
+  var response = await fetch(url);
+  var fileBlob = await response.blob();
+  var bitmap = await createImageBitmap(fileBlob);
+  var canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  var context = canvas.getContext('2d');
+  context.drawImage(bitmap, 0, 0);
+  context.fillStyle = "#FF0000";
+  context.fillRect(20, 20, 150, 100);
+  // var myData = context.getImageData(0, 0, bitmap.width, bitmap.height);
+
+  // const context = canvas.getContext('webgl');
+  var blob = await canvas[
+    canvas.convertToBlob 
+      ? 'convertToBlob' // specs
+      : 'toBlob'        // current Firefox
+   ]();
+
+  var dataUrl = await blobToBase64(blob);
+  // console.log("dataUrl", dataUrl);
+
+  return dataUrl;
 };

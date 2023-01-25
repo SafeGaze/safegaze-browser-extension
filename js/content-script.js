@@ -23,7 +23,7 @@ const replaceImages = () => {
     }
 
     if (isInViewport(img)) {
-      img.classList.add("loading");
+      img.classList.add("halal-loading");
       chrome.runtime.sendMessage(
         {
           type: "processImage",
@@ -32,7 +32,8 @@ const replaceImages = () => {
         },
         (response) => {
           img.src = response;
-          img.classList.remove("loading");
+          img.classList.remove("halal-loading");
+          img.classList.add('halal-processed');
         }
       );
     }
@@ -41,4 +42,14 @@ const replaceImages = () => {
 
 replaceImages();
 
+document.head.insertAdjacentHTML("beforeend", `<style>
+body.hide-images img{
+  opacity: 0!important;
+}
+body.hide-images img.halal-processed{
+  opacity: 1!important;
+}
+</style>`);
+
 document.addEventListener("scroll", replaceImages);
+document.body.classList.add("hide-images");
