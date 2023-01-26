@@ -1,5 +1,5 @@
-import { halalzSettings } from "./database.js";
-import { processImage, getBase64FromUrl } from "./utils.js";
+import { halalzSettings } from "./settings/database.js";
+import { processImage, getBase64FromUrl } from "./helpers";
 
 chrome.action.onClicked.addListener(() => {
   if (chrome.runtime.openOptionsPage) {

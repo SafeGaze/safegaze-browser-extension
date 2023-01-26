@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "build": "esbuild src/background/index.js --bundle --outfile=dist/background.js",
+    "build-content": "esbuild src/content/index.js --bundle --outfile=dist/content.js"
+  },
+  "dependencies": {
+    "@mediapipe/selfie_segmentation": "^0.1.1671057942",
+    "@tensorflow-models/body-segmentation": "^1.0.1",
+    "@tensorflow/tfjs-backend-webgl": "^4.2.0",
+    "@tensorflow/tfjs-converter": "^4.2.0",
+    "@tensorflow/tfjs-core": "^4.2.0",
+    "esbuild": "^0.17.4"
+  }
+}

@@ -43,13 +43,13 @@ const replaceImages = () => {
 replaceImages();
 
 document.head.insertAdjacentHTML("beforeend", `<style>
-body.hide-images img{
+body img{
   opacity: 0!important;
 }
-body.hide-images img.halal-processed{
+body img.halal-processed{
   opacity: 1!important;
 }
 </style>`);
+// document.body.classList.add("hide-images");
 
 document.addEventListener("scroll", replaceImages);
-document.body.classList.add("hide-images");
