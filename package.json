@@ -1,7 +1,9 @@
 {
   "scripts": {
-    "build": "esbuild src/background/index.js --bundle --outfile=dist/background.js",
-    "build-content": "esbuild src/content/index.js --bundle --outfile=dist/content.js"
+    "watch": "node build/watch.mjs",
+    "build-background": "esbuild src/background/index.js --bundle --outfile=dist/background/index.js",
+    "build-content": "esbuild src/content/index.js --bundle --outfile=dist/content/index.js",
+    "build": "yarn build-background && yarn build-content"
   },
   "dependencies": {
     "@mediapipe/selfie_segmentation": "^0.1.1671057942",
