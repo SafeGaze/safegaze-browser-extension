@@ -45654,13 +45654,20 @@ return a / b;`;
     });
   }
   var getBase64FromUrl = async (url, is_base64) => {
+    const redMark = false;
     var response = await fetch(url);
     var fileBlob = await response.blob();
     var bitmap = await createImageBitmap(fileBlob);
     var canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
     var context = canvas.getContext("2d");
     context.drawImage(bitmap, 0, 0);
-    await body_masking_default(context, bitmap, canvas);
+    if (redMark === true) {
+      context.fillStyle = "#FF0000";
+      context.fillRect(20, 20, 150, 100);
+      var myData = context.getImageData(0, 0, bitmap.width, bitmap.height);
+    } else {
+      await body_masking_default(context, bitmap, canvas);
+    }
     var blob = await canvas[
       canvas.convertToBlob ? "convertToBlob" : "toBlob"
       // current Firefox
