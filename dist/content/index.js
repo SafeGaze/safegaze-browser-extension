@@ -2,16 +2,25 @@
   // src/content/index.js
   var isInViewport = function(elem) {
     const bounding = elem.getBoundingClientRect();
-    return bounding.top >= 0 && bounding.left >= 0 && bounding.right <= (window.innerWidth || document.documentElement.clientWidth) && bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight);
+    return bounding.top >= 0 && // bounding.left >= -100 &&
+    // bounding.right - 100 <=
+    //   (window.innerWidth || document.documentElement.clientWidth) &&
+    bounding.bottom <= (window.innerHeight || document.documentElement.clientHeight);
   };
   var isBase64Img = (imgSrc) => {
     return imgSrc.startsWith("data:image/");
   };
   var replaceImages = () => {
-    const getAllImgs = document.querySelectorAll("img:not(.loading)") || [];
+    let getAllImgs = document.querySelectorAll(
+      "img:not(.halal-loading):not(.halal-processed), image:not(.halal-loading):not(.halal-processed)"
+    ) || [];
     for (const img of getAllImgs) {
-      const imgUrl = img.src;
-      if (isBase64Img(imgUrl) || !img.src) {
+      let imgUrl = img.src;
+      const oldImg = img;
+      if (img.tagName === "image") {
+        imgUrl = img.getAttribute("xlink:href");
+      }
+      if (!imgUrl) {
         continue;
       }
       if (isInViewport(img)) {
@@ -23,22 +32,46 @@
             isBase64Img: isBase64Img(imgUrl)
           },
           (response) => {
-            img.src = response;
+            let latestImgUrl = img.src;
+            if (img.tagName === "image") {
+              latestImgUrl = img.getAttribute("xlink:href");
+            }
+            if (response && latestImgUrl === imgUrl) {
+              console.log(img, imgUrl);
+              if (img.tagName === "image") {
+                img.setAttribute("xlink:href", response);
+              } else {
+                img.src = response;
+              }
+              img.classList.add("halal-processed");
+              img.classList.remove("halal-invalid-img");
+            }
+            if (!response) {
+              img.classList.add("halal-invalid-img");
+            }
             img.classList.remove("halal-loading");
-            img.classList.add("halal-processed");
           }
         );
       }
     }
   };
-  replaceImages();
-  document.head.insertAdjacentHTML("beforeend", `<style>
-body img{
-  opacity: 0!important;
-}
-body img.halal-processed{
-  opacity: 1!important;
-}
-</style>`);
   document.addEventListener("scroll", replaceImages);
+  var observer = new MutationObserver((mutationList) => {
+    for (const mutation of mutationList) {
+      let mutationImgUrl = mutation.target.src;
+      if (mutation.target.tagName === "image") {
+        mutationImgUrl = mutation.target.getAttribute("xlink:href");
+      }
+      if (mutation.type === "attributes" && mutation.target.classList.contains("halal-processed") && !isBase64Img(mutationImgUrl)) {
+        mutation.target.classList.remove("halal-processed");
+        mutation.target.classList.remove("halal-loading");
+      }
+    }
+    replaceImages();
+  });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true
+  });
 })();

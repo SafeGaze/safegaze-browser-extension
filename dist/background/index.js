@@ -45697,6 +45697,8 @@ return a / b;`;
     if (request.type === "processImage") {
       getBase64FromUrl(request.imgUrl, request.isBase64Img).then((result) => {
         sendResponse(result);
+      }).catch((err) => {
+        sendResponse("");
       });
       return true;
     }

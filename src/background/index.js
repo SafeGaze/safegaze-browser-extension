@@ -22,9 +22,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === "processImage") {
-    getBase64FromUrl(request.imgUrl, request.isBase64Img).then((result) => {
-      sendResponse(result);
-    });
+    getBase64FromUrl(request.imgUrl, request.isBase64Img)
+      .then((result) => {
+        sendResponse(result);
+      })
+      .catch((err) => {
+        sendResponse("");
+      });
+
     return true;
   }
 });

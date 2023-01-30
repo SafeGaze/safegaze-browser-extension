@@ -19,6 +19,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["dist/content/index.js"],
+      "css": ["dist/content/style.css"],
       "run_at": "document_end"
     }
   ]
