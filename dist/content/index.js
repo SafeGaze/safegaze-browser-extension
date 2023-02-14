@@ -12,7 +12,7 @@
   };
   var replaceImages = () => {
     let getAllImgs = document.querySelectorAll(
-      "img:not(.halal-loading):not(.halal-processed), image:not(.halal-loading):not(.halal-processed)"
+      "img:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img)"
     ) || [];
     for (const img of getAllImgs) {
       let imgUrl = img.src;
@@ -55,7 +55,7 @@
       }
     }
   };
-  document.addEventListener("scroll", replaceImages, true);
+  document.addEventListener("scroll", replaceImages);
   var observer = new MutationObserver((mutationList) => {
     for (const mutation of mutationList) {
       let mutationImgUrl = mutation.target.src;

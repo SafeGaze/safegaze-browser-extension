@@ -4,6 +4,7 @@ body image {
 }
 body img.halal-processed,
 body image.halal-processed,
-body image.halal-invalid-img body img.halal-invalid-img {
+body image.halal-invalid-img,
+body img.halal-invalid-img {
   opacity: 1 !important;
 }

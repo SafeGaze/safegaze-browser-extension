@@ -16,7 +16,7 @@ const isBase64Img = (imgSrc) => {
 const replaceImages = () => {
   let getAllImgs =
     document.querySelectorAll(
-      "img:not(.halal-loading):not(.halal-processed), image:not(.halal-loading):not(.halal-processed)"
+      "img:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img)"
     ) || [];
 
   for (const img of getAllImgs) {
@@ -65,7 +65,7 @@ const replaceImages = () => {
   }
 };
 
-document.addEventListener("scroll", replaceImages, true);
+document.addEventListener("scroll", replaceImages);
 
 let observer = new MutationObserver((mutationList) => {
   for (const mutation of mutationList) {
