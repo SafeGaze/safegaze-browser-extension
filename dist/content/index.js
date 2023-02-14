@@ -55,7 +55,7 @@
       }
     }
   };
-  document.addEventListener("scroll", replaceImages);
+  document.addEventListener("scroll", replaceImages, true);
   var observer = new MutationObserver((mutationList) => {
     for (const mutation of mutationList) {
       let mutationImgUrl = mutation.target.src;

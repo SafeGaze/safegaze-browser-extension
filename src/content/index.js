@@ -65,7 +65,7 @@ const replaceImages = () => {
   }
 };
 
-document.addEventListener("scroll", replaceImages);
+document.addEventListener("scroll", replaceImages, true);
 
 let observer = new MutationObserver((mutationList) => {
   for (const mutation of mutationList) {
