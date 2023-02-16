@@ -7,6 +7,7 @@ let ctx = await esbuild.context({
   ],
   outdir: 'dist',
   bundle: true,
+  format: 'esm',
   allowOverwrite: true
 })
 

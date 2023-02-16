@@ -1,3 +1,9 @@
+import maskingPipeline from "../background/masking-pipeline/maskingPipeline.js";
+
+const maskingPipelineInstance = new maskingPipeline();
+maskingPipelineInstance.loadModel();
+var n = 0;
+
 const isInViewport = function (elem) {
   const bounding = elem.getBoundingClientRect();
   return (
@@ -6,61 +12,93 @@ const isInViewport = function (elem) {
     // bounding.right - 100 <=
     //   (window.innerWidth || document.documentElement.clientWidth) &&
     bounding.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight)
+    (window.innerHeight || document.documentElement.clientHeight)
   );
 };
 const isBase64Img = (imgSrc) => {
   return imgSrc.startsWith("data:image/");
 };
 
-const replaceImages = () => {
+const replaceImages = async () => {
   let getAllImgs =
     document.querySelectorAll(
       "img:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img)"
     ) || [];
 
-  for (const img of getAllImgs) {
+
+  for await (const img of getAllImgs) {
     let imgUrl = img.src;
     const oldImg = img;
     if (img.tagName === "image") {
       imgUrl = img.getAttribute("xlink:href");
     }
 
-    if (!imgUrl) {
+    if (!imgUrl || isBase64Img(imgUrl)) {
       continue;
     }
 
     if (isInViewport(img)) {
+      n++;
       img.classList.add("halal-loading");
-      chrome.runtime.sendMessage(
-        {
-          type: "processImage",
-          imgUrl,
-          isBase64Img: isBase64Img(imgUrl),
-        },
-        (response) => {
-          let latestImgUrl = img.src;
+      console.log(n);
+      const data = await maskingPipelineInstance.processImage(imgUrl, isBase64Img(imgUrl), n, img);
 
-          if (img.tagName === "image") {
-            latestImgUrl = img.getAttribute("xlink:href");
-          }
+      let response = data.response;
+      // let img = img;
+      console.log("request:response", n + ' ' + data.n);
+      if (n !== data.n) {
+        // return;
+      }
+      // let latestImgUrl = img.src;
 
-          if (response && latestImgUrl === imgUrl) {
-            console.log(img, imgUrl);
-            if (img.tagName === "image") {
-              img.setAttribute("xlink:href", response);
-            } else {
-              img.src = response;
-            }
-            img.classList.add("halal-processed");
-            img.classList.remove("halal-invalid-img");
-          }
-          if (!response) {
-            img.classList.add("halal-invalid-img");
-          }
-          img.classList.remove("halal-loading");
+      // if (img.tagName === "image") {
+      //   latestImgUrl = img.getAttribute("xlink:href");
+      // }
+
+      if (response) {
+
+        if (img.tagName === "image") {
+          img.setAttribute("xlink:href", response);
+        } else {
+          img.src = response;
         }
-      );
+        img.classList.add("halal-processed");
+        img.classList.remove("halal-invalid-img");
+      }
+      if (!response) {
+        img.classList.add("halal-invalid-img");
+      }
+      img.classList.remove("halal-loading");
+
+      // chrome.runtime.sendMessage(
+      //   {
+      //     type: "processImage",
+      //     imgUrl,
+      //     isBase64Img: isBase64Img(imgUrl),
+      //   },
+      //   (response) => {
+      //     let latestImgUrl = img.src;
+
+      //     if (img.tagName === "image") {
+      //       latestImgUrl = img.getAttribute("xlink:href");
+      //     }
+
+      //     if (response && latestImgUrl === imgUrl) {
+      //       console.log(img, imgUrl);
+      //       if (img.tagName === "image") {
+      //         img.setAttribute("xlink:href", response);
+      //       } else {
+      //         img.src = response;
+      //       }
+      //       img.classList.add("halal-processed");
+      //       img.classList.remove("halal-invalid-img");
+      //     }
+      //     if (!response) {
+      //       img.classList.add("halal-invalid-img");
+      //     }
+      //     img.classList.remove("halal-loading");
+      //   }
+      // );
     }
   }
 };
