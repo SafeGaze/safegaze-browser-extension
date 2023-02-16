@@ -1,8 +1,26 @@
+import maskImage from "../background/masking-pipeline/maskImage.js";
 import maskingPipeline from "../background/masking-pipeline/maskingPipeline.js";
 
-const maskingPipelineInstance = new maskingPipeline();
-maskingPipelineInstance.loadModel();
+const pipeline = new maskingPipeline();
+pipeline.loadModel();
 var n = 0;
+
+// Set up the throttler 
+const throttle = (fn, delay) => { 
+  return fn();
+  // Capture the current time 
+  let time = Date.now(); 
+ 
+  // Here's our logic 
+  return () => { 
+    if((time + delay - Date.now()) <= 0) { 
+      // Run the function we've passed to our throttler, 
+      // and reset the `time` variable (so we can check again). 
+      fn(); 
+      time = Date.now(); 
+    } 
+  } 
+} 
 
 const isInViewport = function (elem) {
   const bounding = elem.getBoundingClientRect();
@@ -20,15 +38,18 @@ const isBase64Img = (imgSrc) => {
 };
 
 const replaceImages = async () => {
+
   let getAllImgs =
     document.querySelectorAll(
-      "img:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img)"
+      "img:not(.halal-processing):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-processing):not(.halal-processed):not(.halal-invalid-img)"
     ) || [];
 
 
   for await (const img of getAllImgs) {
+    n++;
+
     let imgUrl = img.src;
-    const oldImg = img;
+
     if (img.tagName === "image") {
       imgUrl = img.getAttribute("xlink:href");
     }
@@ -38,72 +59,26 @@ const replaceImages = async () => {
     }
 
     if (isInViewport(img)) {
-      n++;
-      img.classList.add("halal-loading");
-      console.log(n);
-      const data = await maskingPipelineInstance.processImage(imgUrl, isBase64Img(imgUrl), n, img);
 
-      let response = data.response;
-      // let img = img;
-      console.log("request:response", n + ' ' + data.n);
-      if (n !== data.n) {
-        // return;
-      }
-      // let latestImgUrl = img.src;
+      img.classList.add("halal-processing");
 
-      // if (img.tagName === "image") {
-      //   latestImgUrl = img.getAttribute("xlink:href");
-      // }
-
-      if (response) {
+      // await new Promise(r => setTimeout(r, 1000));
+      pipeline.processImage(imgUrl, isBase64Img(imgUrl), n, img).then((response)=>{
+        console.log("request:response", n + ' ' + response.n);
 
         if (img.tagName === "image") {
-          img.setAttribute("xlink:href", response);
+          img.setAttribute("xlink:href", response.dataUrl);
         } else {
-          img.src = response;
+          img.src = response.dataUrl;
         }
         img.classList.add("halal-processed");
-        img.classList.remove("halal-invalid-img");
-      }
-      if (!response) {
-        img.classList.add("halal-invalid-img");
-      }
-      img.classList.remove("halal-loading");
-
-      // chrome.runtime.sendMessage(
-      //   {
-      //     type: "processImage",
-      //     imgUrl,
-      //     isBase64Img: isBase64Img(imgUrl),
-      //   },
-      //   (response) => {
-      //     let latestImgUrl = img.src;
-
-      //     if (img.tagName === "image") {
-      //       latestImgUrl = img.getAttribute("xlink:href");
-      //     }
-
-      //     if (response && latestImgUrl === imgUrl) {
-      //       console.log(img, imgUrl);
-      //       if (img.tagName === "image") {
-      //         img.setAttribute("xlink:href", response);
-      //       } else {
-      //         img.src = response;
-      //       }
-      //       img.classList.add("halal-processed");
-      //       img.classList.remove("halal-invalid-img");
-      //     }
-      //     if (!response) {
-      //       img.classList.add("halal-invalid-img");
-      //     }
-      //     img.classList.remove("halal-loading");
-      //   }
-      // );
+        img.classList.remove("halal-processing");
+      });
     }
   }
 };
 
-document.addEventListener("scroll", replaceImages);
+document.addEventListener("scroll", throttle(replaceImages, 1000));
 
 let observer = new MutationObserver((mutationList) => {
   for (const mutation of mutationList) {
@@ -119,11 +94,11 @@ let observer = new MutationObserver((mutationList) => {
       !isBase64Img(mutationImgUrl)
     ) {
       mutation.target.classList.remove("halal-processed");
-      mutation.target.classList.remove("halal-loading");
+      mutation.target.classList.remove("halal-processing");
     }
   }
 
-  replaceImages();
+  throttle(replaceImages, 1000);
 });
 
 observer.observe(document.body, {
@@ -131,3 +106,7 @@ observer.observe(document.body, {
   subtree: true,
   attributes: true,
 });
+
+// initially call the event
+// document ready 
+replaceImages();

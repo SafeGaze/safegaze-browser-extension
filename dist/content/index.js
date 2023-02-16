@@ -45565,7 +45565,7 @@ var maskingPipeline = class {
       // current Firefox
     ]();
     const dataUrl = await this.blobToBase64(blob);
-    return { response: dataUrl, img, n: n2 };
+    return { dataUrl, img, n: n2 };
   }
   blobToBase64(blob) {
     return new Promise((resolve, _) => {
@@ -45578,9 +45578,19 @@ var maskingPipeline = class {
 var maskingPipeline_default = maskingPipeline;
 
 // src/content/index.js
-var maskingPipelineInstance = new maskingPipeline_default();
-maskingPipelineInstance.loadModel();
+var pipeline = new maskingPipeline_default();
+pipeline.loadModel();
 var n = 0;
+var throttle = (fn, delay) => {
+  return fn();
+  let time2 = Date.now();
+  return () => {
+    if (time2 + delay - Date.now() <= 0) {
+      fn();
+      time2 = Date.now();
+    }
+  };
+};
 var isInViewport = function(elem) {
   const bounding = elem.getBoundingClientRect();
   return bounding.top >= 0 && // bounding.left >= -100 &&
@@ -45593,11 +45603,11 @@ var isBase64Img = (imgSrc) => {
 };
 var replaceImages = async () => {
   let getAllImgs = document.querySelectorAll(
-    "img:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img)"
+    "img:not(.halal-processing):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-processing):not(.halal-processed):not(.halal-invalid-img)"
   ) || [];
   for await (const img of getAllImgs) {
+    n++;
     let imgUrl = img.src;
-    const oldImg = img;
     if (img.tagName === "image") {
       imgUrl = img.getAttribute("xlink:href");
     }
@@ -45605,31 +45615,21 @@ var replaceImages = async () => {
       continue;
     }
     if (isInViewport(img)) {
-      n++;
-      img.classList.add("halal-loading");
-      console.log(n);
-      const data = await maskingPipelineInstance.processImage(imgUrl, isBase64Img(imgUrl), n, img);
-      let response = data.response;
-      console.log("request:response", n + " " + data.n);
-      if (n !== data.n) {
-      }
-      if (response) {
+      img.classList.add("halal-processing");
+      pipeline.processImage(imgUrl, isBase64Img(imgUrl), n, img).then((response) => {
+        console.log("request:response", n + " " + response.n);
         if (img.tagName === "image") {
-          img.setAttribute("xlink:href", response);
+          img.setAttribute("xlink:href", response.dataUrl);
         } else {
-          img.src = response;
+          img.src = response.dataUrl;
         }
         img.classList.add("halal-processed");
-        img.classList.remove("halal-invalid-img");
-      }
-      if (!response) {
-        img.classList.add("halal-invalid-img");
-      }
-      img.classList.remove("halal-loading");
+        img.classList.remove("halal-processing");
+      });
     }
   }
 };
-document.addEventListener("scroll", replaceImages);
+document.addEventListener("scroll", throttle(replaceImages, 1e3));
 var observer = new MutationObserver((mutationList) => {
   for (const mutation of mutationList) {
     let mutationImgUrl = mutation.target.src;
@@ -45638,16 +45638,17 @@ var observer = new MutationObserver((mutationList) => {
     }
     if (mutation.type === "attributes" && mutation.target.classList.contains("halal-processed") && !isBase64Img(mutationImgUrl)) {
       mutation.target.classList.remove("halal-processed");
-      mutation.target.classList.remove("halal-loading");
+      mutation.target.classList.remove("halal-processing");
     }
   }
-  replaceImages();
+  throttle(replaceImages, 1e3);
 });
 observer.observe(document.body, {
   childList: true,
   subtree: true,
   attributes: true
 });
+replaceImages();
 /*! Bundled license information:
 
 @tensorflow/tfjs-core/dist/backends/backend.js:
