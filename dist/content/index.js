@@ -45499,7 +45499,7 @@ var maskingPipeline = class {
     this._segmentationConfig = {
       // flipHorizontal: true,
       internalResolution: "high",
-      segmentationThreshold: 0.9,
+      segmentationThreshold: 0.3,
       multiSegmentation: false,
       segmentBodyParts: false
     };
@@ -45524,6 +45524,8 @@ var maskingPipeline = class {
     );
     const foregroundColor = { r: 0, g: 0, b: 0, a: 255 };
     const backgroundColor = { r: 0, g: 0, b: 0, a: 0 };
+    const drawContour = false;
+    const foregroundThreshold = 0.1;
     const backgroundDarkeningMask = await Ue(
       segmentation,
       foregroundColor,
