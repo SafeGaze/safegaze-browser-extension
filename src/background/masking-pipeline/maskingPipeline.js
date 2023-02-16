@@ -73,7 +73,7 @@ class maskingPipeline {
         this._context.font = "40px Arial";
         this._context.fillText(n, 10, 40);
 
-        await this.maskImage();
+        // await this.maskImage();
         // await new Promise(r => setTimeout(r, 1000));
 
         const blob = await this._canvas[

@@ -7,7 +7,7 @@ var n = 0;
 
 // Set up the throttler 
 const throttle = (fn, delay) => { 
-  return fn();
+  return fn(); // skipping the throttler for testing
   // Capture the current time 
   let time = Date.now(); 
  
