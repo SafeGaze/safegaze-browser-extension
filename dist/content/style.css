@@ -8,3 +8,7 @@ body image.halal-invalid-img,
 body img.halal-invalid-img {
   opacity: 1 !important;
 }
+
+iframe {
+  filter: blur(10px) !important;
+}
