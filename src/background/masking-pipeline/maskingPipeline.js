@@ -72,9 +72,9 @@ class maskingPipeline {
         this._context.fillRect(10, 10, 30, 20);
         this._context.fillStyle = "#00FF00";
         this._context.font = "40px Arial";
-        this._context.fillText(n, 10, 40);
+        this._context.fillText("filtered" + n, 10, 40);
 
-        await this.maskImage();
+        // await this.maskImage();
 
         const blob = await this._canvas[
             this._canvas.convertToBlob
