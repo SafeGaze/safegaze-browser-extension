@@ -29,6 +29,7 @@ class maskingPipeline {
     }
 
     async maskImage() {
+        await this.loadModel();
 
         const imageData = await this._context.getImageData(
             0, 0, this._bitmap.width, this._bitmap.height
@@ -55,11 +56,8 @@ class maskingPipeline {
 
     }
 
-    async processImage(url, is_base64, n, img) {
-        if (is_base64 === true) {
-            console.log("base64 image", n)
-            return url;
-        }
+    async processImage(url) {
+
         const response = await fetch(url);
         const fileBlob = await response.blob();
         this._bitmap = await createImageBitmap(fileBlob);
@@ -71,7 +69,7 @@ class maskingPipeline {
         this._context.fillRect(10, 10, 30, 20);
         this._context.fillStyle = "#00FF00";
         this._context.font = "40px Arial";
-        this._context.fillText(n, 10, 40);
+        this._context.fillText("filtered", 10, 40);
 
         // await this.maskImage();
         // await new Promise(r => setTimeout(r, 1000));
@@ -81,9 +79,10 @@ class maskingPipeline {
                 ? 'convertToBlob' // specs
                 : 'toBlob'        // current Firefox
         ]();
-        const dataUrl = await this.blobToBase64(blob);
+        const maskedUrl = await this.blobToBase64(blob);
         // console.log("data " + n, typeof dataUrl);
-        return {dataUrl: dataUrl, img: img, n:n};
+        // return {dataUrl: dataUrl, img: img, n:n};
+        return {maskedUrl:maskedUrl, url:url };
     }
     blobToBase64(blob) {
         return new Promise((resolve, _) => {
