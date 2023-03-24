@@ -34,7 +34,11 @@ var analyzer = class {
   };
   analyze = async (data) => {
     this.data = data;
-    let imageData = await this.drawImage(data.mediaUrl);
+    try {
+      let imageData = await this.drawImage(data.mediaUrl);
+    } catch (error) {
+      return null;
+    }
     this.frameCtx.fillStyle = "#FF0000";
     this.frameCtx.fillRect(10, 10, 30, 20);
     this.frameCtx.fillStyle = "#00FF00";
@@ -61,20 +65,22 @@ var queueManager = {
     this.analyzer = new analyzer_default();
     await this.analyzer.init();
   },
-  addToQueue: function(data) {
+  addToQueue: async function(data) {
+    console.log("addToQueue");
     this.dataQueue.push(data);
     if (!this.isAnalyzing) {
       this.processQueue();
     }
   },
   listenRequest: function() {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse2) => {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === "HVF-MEDIA-ANALYSIS-REQUEST") {
         this.addToQueue({ tabID: sender.tab.id, ...request.payload });
       }
     });
   },
   processQueue: async function() {
+    console.log("processQueue", this.dataQueue.length);
     if (this.dataQueue.length <= 0) {
       this.isAnalyzing = false;
       return;
@@ -82,9 +88,13 @@ var queueManager = {
     this.isAnalyzing = true;
     let data = this.dataQueue.shift();
     let result = await this.analyzer.analyze(data);
-    data.baseObject.shouldMask = result.shouldMask;
-    data.baseObject.maskedUrl = result.maskedUrl;
-    chrome.runtime.sendResponse(
+    if (result === null) {
+      this.processQueue();
+      return;
+    }
+    data.shouldMask = result.shouldMask;
+    data.maskedUrl = result.maskedUrl;
+    chrome.tabs.sendMessage(
       data.tabID,
       {
         action: "HVF-MEDIA-ANALYSIS-REPORT",
@@ -95,9 +105,7 @@ var queueManager = {
         } else {
         }
       }
-    ).catch((err) => {
-      sendResponse("ERROR");
-    });
+    );
     this.processQueue();
   }
 };

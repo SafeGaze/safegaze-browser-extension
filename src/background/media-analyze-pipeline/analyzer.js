@@ -47,7 +47,12 @@ class analyzer {
 
     analyze = async (data) => {
         this.data = data;
-        let imageData = await this.drawImage(data.mediaUrl);
+        try {
+            let imageData = await this.drawImage(data.mediaUrl);
+        } catch (error) {
+            return null;
+        }
+        
         
         // testing
 

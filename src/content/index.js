@@ -1,9 +1,10 @@
 const hvf = {
+  domObjects: [],
 
   // Initialize the extension
   init: function () {
+    console.log(this.domObjects);
     this.sendMedia();
-
     this.receiveMedia();
 
     // wait for the page to load
@@ -20,7 +21,7 @@ const hvf = {
     // Get all media
     // currently supports images only
     let media = document.querySelectorAll('img, image');
-    // console.log(media);
+
     for (let i = 0; i < media.length; i++) {
       console.log('foo');
       // looking for new images only
@@ -40,19 +41,22 @@ const hvf = {
 
       if (url && url.length > 0) {
 
+        let domObjectIndex = this.domObjects.push(media[i]);
+        console.log(domObjectIndex);
+        let payload = {
+          mediaUrl: url,
+          mediaType: 'image',
+          baseObject: {
+            originalUrl: url,
+            domObjectIndex: domObjectIndex,
+            srcAttr: srcAttr,
+            shouldMask: false
+          }
+        };
 
         chrome.runtime.sendMessage({
           action: 'HVF-MEDIA-ANALYSIS-REQUEST',
-          payload: {
-            mediaUrl: url,
-            mediaType: 'image',
-            baseObject: {
-              originalUrl: url,
-              domObject: media[i],
-              srcAttr: srcAttr,
-              shouldMask: false
-            }
-          },
+          payload: payload,
         }, (result) => {
           if (!chrome.runtime.lastError) {
             // message processing code goes here
@@ -71,9 +75,12 @@ const hvf = {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === 'HVF-MEDIA-ANALYSIS-REPORT') {
 
-        let media = message.payload.baseObject.domObject;
+        let media = this.domObjects[message.payload.baseObject.domObjectIndex];
+        console.log([this.domObjects, message.payload]);
         let srcAttr = message.payload.baseObject.srcAttr;
         let originalUrl = message.payload.baseObject.originalUrl;
+
+        if (!media) return;
 
         if (message.payload.shouldMask && message.payload.maskedUrl) {
           media.classList.add("hvf-masked");
@@ -119,7 +126,7 @@ const hvf = {
     // });
 
     // Start observing the scroll event
-    document.addEventListener("scroll", this.sendMedia);
+    document.addEventListener("scroll", () => {hvf.sendMedia()}, true);
   },
 
 };
