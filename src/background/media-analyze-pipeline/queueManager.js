@@ -1,15 +1,15 @@
-import analyzer from "./analyzer.js";
+import analyzerClass from "./analyzer.js";
 
 const queueManager = {
 
     isAnalyzing: false,
     dataQueue: [],
-    analyzer: analyzer,
+    analyzer: null,
 
     init: async function () {
         this.listenRequest();
 
-        new this.analyzer();
+        this.analyzer = new analyzerClass();
         await this.analyzer.init();
     },
 
@@ -40,7 +40,7 @@ const queueManager = {
         data.baseObject.shouldMask = result.shouldMask;
         data.baseObject.maskedUrl = result.maskedUrl;
 
-        this.sendResponse(data.tabID,
+        chrome.runtime.sendResponse(data.tabID,
             {
                 action: "HVF-MEDIA-ANALYSIS-REPORT",
                 payload: data

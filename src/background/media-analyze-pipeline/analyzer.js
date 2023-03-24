@@ -3,10 +3,16 @@
 class analyzer {
     constructor() {
         // canvas
-        this.frameCanvas = document.getElementById('canvas');
-        this.frameCtx = canvas.getContext('2d');
+        this.frameCanvas = new OffscreenCanvas(400, 400);
+        this.frameCtx = this.frameCanvas.getContext('2d');
         this.data = {};
+        this.n = 0;
     }
+
+    init = async () => {
+        // load model
+
+    };
 
     // draws the image to the canvas and returns the image data
     drawImage = async (imageUrl) => {
@@ -49,10 +55,11 @@ class analyzer {
         this.frameCtx.fillRect(10, 10, 30, 20);
         this.frameCtx.fillStyle = "#00FF00";
         this.frameCtx.font = "40px Arial";
-        this.frameCtx.fillText("filtered" + n, 10, 40);
+        this.frameCtx.fillText("filtered" + this.n, 10, 40);
 
         let blob = await this.canvasToBlob(this.frameCanvas);
         let base64 = await this.blobToBase64(blob);
+        this.n++;
 
         return {
             shouldMask: true,

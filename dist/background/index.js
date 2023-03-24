@@ -1,10 +1,13 @@
 // src/background/media-analyze-pipeline/analyzer.js
 var analyzer = class {
   constructor() {
-    this.frameCanvas = document.getElementById("canvas");
-    this.frameCtx = canvas.getContext("2d");
+    this.frameCanvas = new OffscreenCanvas(400, 400);
+    this.frameCtx = this.frameCanvas.getContext("2d");
     this.data = {};
+    this.n = 0;
   }
+  init = async () => {
+  };
   // draws the image to the canvas and returns the image data
   drawImage = async (imageUrl) => {
     let img = await fetch(imageUrl);
@@ -22,9 +25,9 @@ var analyzer = class {
       reader.readAsDataURL(blob);
     });
   };
-  canvasToBlob = async (canvas2) => {
-    var blob = await canvas2[
-      canvas2.convertToBlob ? "convertToBlob" : "toBlob"
+  canvasToBlob = async (canvas) => {
+    var blob = await canvas[
+      canvas.convertToBlob ? "convertToBlob" : "toBlob"
       // current Firefox
     ]();
     return blob;
@@ -36,9 +39,10 @@ var analyzer = class {
     this.frameCtx.fillRect(10, 10, 30, 20);
     this.frameCtx.fillStyle = "#00FF00";
     this.frameCtx.font = "40px Arial";
-    this.frameCtx.fillText("filtered" + n, 10, 40);
+    this.frameCtx.fillText("filtered" + this.n, 10, 40);
     let blob = await this.canvasToBlob(this.frameCanvas);
     let base64 = await this.blobToBase64(blob);
+    this.n++;
     return {
       shouldMask: true,
       maskedUrl: base64
@@ -51,10 +55,10 @@ var analyzer_default = analyzer;
 var queueManager = {
   isAnalyzing: false,
   dataQueue: [],
-  analyzer: analyzer_default,
+  analyzer: null,
   init: async function() {
     this.listenRequest();
-    new this.analyzer();
+    this.analyzer = new analyzer_default();
     await this.analyzer.init();
   },
   addToQueue: function(data) {
@@ -80,7 +84,7 @@ var queueManager = {
     let result = await this.analyzer.analyze(data);
     data.baseObject.shouldMask = result.shouldMask;
     data.baseObject.maskedUrl = result.maskedUrl;
-    this.sendResponse(
+    chrome.runtime.sendResponse(
       data.tabID,
       {
         action: "HVF-MEDIA-ANALYSIS-REPORT",

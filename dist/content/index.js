@@ -12,8 +12,9 @@ var hvf = {
   },
   // Send media to the background script
   sendMedia: function() {
-    let media = document.document.querySelector("img, image");
+    let media = document.querySelectorAll("img, image");
     for (let i = 0; i < media.length; i++) {
+      console.log("foo");
       if (media[i].classList.contains("hvf-analyz"))
         continue;
       media[i].classList.add("hvf-analyzing");
@@ -24,7 +25,7 @@ var hvf = {
         srcAttr = "xlink:href";
       }
       if (url && url.length > 0) {
-        browser.runtime.sendMessage({
+        chrome.runtime.sendMessage({
           action: "HVF-MEDIA-ANALYSIS-REQUEST",
           payload: {
             mediaUrl: url,
@@ -46,7 +47,7 @@ var hvf = {
   },
   // Receive media from the background script
   receiveMedia: function() {
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
         let media = message.payload.baseObject.domObject;
         let srcAttr = message.payload.baseObject.srcAttr;
@@ -74,11 +75,6 @@ var hvf = {
         }
       }
       this.sendMedia();
-    });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true
     });
     document.addEventListener("scroll", this.sendMedia);
   }

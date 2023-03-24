@@ -16,10 +16,13 @@ const hvf = {
 
   // Send media to the background script
   sendMedia: function () {
+    // console.log("sending Media");
     // Get all media
     // currently supports images only
-    let media = document.document.querySelector('img, image');
+    let media = document.querySelectorAll('img, image');
+    // console.log(media);
     for (let i = 0; i < media.length; i++) {
+      console.log('foo');
       // looking for new images only
       // matching hvf-analyzing and hvf-analyzed classes
       if (media[i].classList.contains("hvf-analyz")) continue;
@@ -38,7 +41,7 @@ const hvf = {
       if (url && url.length > 0) {
 
 
-        browser.runtime.sendMessage({
+        chrome.runtime.sendMessage({
           action: 'HVF-MEDIA-ANALYSIS-REQUEST',
           payload: {
             mediaUrl: url,
@@ -65,7 +68,7 @@ const hvf = {
 
   // Receive media from the background script
   receiveMedia: function () {
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === 'HVF-MEDIA-ANALYSIS-REPORT') {
 
         let media = message.payload.baseObject.domObject;
@@ -109,11 +112,11 @@ const hvf = {
     });
 
     // Start observing the target node for configured mutations
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
+    // observer.observe(document.body, {
+    //   childList: true,
+    //   subtree: true,
+    //   attributes: true,
+    // });
 
     // Start observing the scroll event
     document.addEventListener("scroll", this.sendMedia);
