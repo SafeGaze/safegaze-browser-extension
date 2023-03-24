@@ -1,16 +1,17 @@
-// Get browser API
-const browser = chrome || browser;
-
-// 
-const haram = {
+const hvf = {
 
   // Initialize the extension
   init: function () {
-    setInterval(() => {
-      this.sendMedia();
-    }, 1000);
-    
+    this.sendMedia();
+
     this.receiveMedia();
+
+    // wait for the page to load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        this.listenUrlUpdate();
+      }, 1000);
+    }, false);
   },
 
   // Send media to the background script
@@ -19,9 +20,9 @@ const haram = {
     // currently supports images only
     let media = document.document.querySelector('img, image');
     for (let i = 0; i < media.length; i++) {
-       // looking for new images only
-       // matching hvf-analyzing and hvf-analyzed classes
-      if(media[i].classList.contains("hvf-analyz")) continue;
+      // looking for new images only
+      // matching hvf-analyzing and hvf-analyzed classes
+      if (media[i].classList.contains("hvf-analyz")) continue;
 
       // add class to mark image as being analyzing
       media[i].classList.add("hvf-analyzing");
@@ -35,23 +36,23 @@ const haram = {
       }
 
       if (url && url.length > 0) {
-      
+
 
         browser.runtime.sendMessage({
           action: 'HVF-MEDIA-ANALYSIS-REQUEST',
-          payload: { 
+          payload: {
             mediaUrl: url,
             mediaType: 'image',
-            returnObject:{
+            baseObject: {
               originalUrl: url,
               domObject: media[i],
               srcAttr: srcAttr,
               shouldMask: false
             }
-           },
+          },
         }, (result) => {
           if (!chrome.runtime.lastError) {
-             // message processing code goes here
+            // message processing code goes here
           } else {
             // error handling code goes here
           }
@@ -67,9 +68,9 @@ const haram = {
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === 'HVF-MEDIA-ANALYSIS-REPORT') {
 
-        let media = message.payload.returnObject.domObject;
-        let srcAttr = message.payload.returnObject.srcAttr;
-        let originalUrl = message.payload.returnObject.originalUrl;
+        let media = message.payload.baseObject.domObject;
+        let srcAttr = message.payload.baseObject.srcAttr;
+        let originalUrl = message.payload.baseObject.originalUrl;
 
         if (message.payload.shouldMask && message.payload.maskedUrl) {
           media.classList.add("hvf-masked");
@@ -84,91 +85,40 @@ const haram = {
     });
   },
 
-  addListener__old: function () {
-    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      // console.log(message);
-      if (message && message.action === 'HARAM-IMAGE-ANALYSIS-REPORT') {
-        console.log('message received', message.payload.url);
-        let url = message.payload.url;
-        if (this.data.hasOwnProperty(url) && this.data[url].analyzed) return;
-        this.data[url] = {
-          analyzed: true,
-          processed: false,
-          block: message.payload.block,
-          maskedUrl: message.payload.maskedUrl
-        };
-        // console.log(this.data[url]);
-        clearTimeout(this.updateTimeout);
-        this.updateTimeout = setTimeout(() => { this.updatePageImages(); }, 100);
+  listenUrlUpdate: function () {
+
+    // Callback function to execute when mutations are observed
+    let observer = new MutationObserver((mutationList) => {
+      for (const mutation of mutationList) {
+        let mutationImgUrl = mutation.target.src;
+
+        if (mutation.target.tagName === "image") {
+          mutationImgUrl = mutation.target.getAttribute("xlink:href");
+        }
+
+        if (
+          mutation.type === "attributes" &&
+          mutation.target.classList.contains("hvf-analyzed")
+        ) {
+          mutation.target.classList.remove("hvf-analyzed");
+          mutation.target.classList.remove("hvf-analyzing");
+        }
       }
+
+      this.sendMedia();
     });
-    window.addEventListener('load', () => {
-      setInterval(() => {
-        this.updatePageImages();
-      }, 1000);
-      this.updatePageImages();
-    }, false);
+
+    // Start observing the target node for configured mutations
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    // Start observing the scroll event
+    document.addEventListener("scroll", this.sendMedia);
   },
 
-  updatePageImages: function () {
-    // Get all images
-    let images = document.getElementsByTagName('img image');
-    // For each image
-    for (let i = 0; i < images.length; i++) {
-      if(images[i].classList.contains("haram-filter-processed")) continue;
-
-      // Get image url
-      let srcAttr = 'src';
-      let url = images[i].src;
-      if (!url || url.length === 0) {
-        url = images[i].getAttribute('xlink:href');
-        srcAttr = 'xlink:href';
-      }
-      // If url not empty
-      if (url && url.length > 0) {
-        // If we have handled the image
-        if (this.data.hasOwnProperty(url) && !this.data[url].processed) {
-          console.log(this.data[url])
-          // If image should be blocked
-          if (this.data[url].block) {
-            images[i].classList.add("haram-filter-blocked");
-          }
-          // If image should be masked
-          if (this.data[url].maskedUrl) {
-            images[i][srcAttr] = this.data[url].maskedUrl;
-
-            // Reset data for memory freeing
-            this.data[url].maskedUrl = null;
-            images[i].classList.add("haram-filter-masked");
-            console.log('image processed', this.data[url]);
-            images[i].classList.remove("haram-filter-analyzing");
-            images[i].classList.add("haram-filter-processed");
-            this.data[url].processed = true;
-          }
-        }
-
-        // Send image for analysis
-        if(!this.data.hasOwnProperty(url) ) {
-
-          // Log image
-          this.data[url] = { analyzed: false, processed: false };
-          // Display as analyzing
-          images[i].classList.add("haram-filter-analyzing");
-          // Send image to the backend
-          browser.runtime.sendMessage({
-            action: 'HARAM-IMAGE-FOR-ANALYSIS',
-            payload: { url: url },
-          }, (result) => {
-            if (!chrome.runtime.lastError) {
-               // message processing code goes here
-            } else {
-              // error handling code goes here
-            }
-          });
-        }
-      }
-    }
-  }
 };
 
-haram.init();
+hvf.init();
