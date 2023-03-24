@@ -2,9 +2,6 @@
 var hvf = {
   // Initialize the extension
   init: function() {
-    let ct = chrome.tabs;
-    console.log(ct);
-    return;
     this.sendMedia();
     this.receiveMedia();
     window.addEventListener("load", () => {
@@ -32,7 +29,7 @@ var hvf = {
           payload: {
             mediaUrl: url,
             mediaType: "image",
-            returnObject: {
+            baseObject: {
               originalUrl: url,
               domObject: media[i],
               srcAttr,
@@ -51,9 +48,9 @@ var hvf = {
   receiveMedia: function() {
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
-        let media = message.payload.returnObject.domObject;
-        let srcAttr = message.payload.returnObject.srcAttr;
-        let originalUrl = message.payload.returnObject.originalUrl;
+        let media = message.payload.baseObject.domObject;
+        let srcAttr = message.payload.baseObject.srcAttr;
+        let originalUrl = message.payload.baseObject.originalUrl;
         if (message.payload.shouldMask && message.payload.maskedUrl) {
           media.classList.add("hvf-masked");
           media.setAttribute(srcAttr, message.payload.maskedUrl);

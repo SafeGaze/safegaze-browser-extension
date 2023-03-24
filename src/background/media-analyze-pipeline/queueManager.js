@@ -1,6 +1,6 @@
 import analyzer from "./analyzer.js";
 
-export default queueManager = {
+const queueManager = {
 
     isAnalyzing: false,
     dataQueue: [],
@@ -57,5 +57,6 @@ export default queueManager = {
 
         this.processQueue();
     }
-
 }
+
+export default queueManager;
