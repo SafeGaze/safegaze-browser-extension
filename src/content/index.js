@@ -6,53 +6,85 @@ const haram = {
 
   // Initialize the extension
   init: function () {
-    this.updateTimeout = null;
-    this.data = {};
-    this.addListener();
-
-    // Add style on page
-    window.addEventListener('DOMContentLoaded', () => {
-      return;
-      // Add svg
-      let filters = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      filters.setAttribute('style', 'position: absolute; top: -99999px');
-      // Red : data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAALAgMAAAAcrnVjAAAACVBMVEUAAAD/AAD///9nGWQeAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+MEFhUCN0yQyxkAAAA8SURBVAjXY1gFBgsYpoaCQALDLDA/gWHGooYGpUUgWqtrEYhWaupapASkm1Y0LGgCiTOBxWHqYfqh5gEA5x4oFe15PC8AAAAASUVORK5CYII=
-      // Black : data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAALAQMAAABbDg+zAAAABlBMVEUAAAD///+l2Z/dAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAADRJREFUCNdj+P///wGGBgYGB4b9//87MKztiAUS1XcdGJbOvurAsPLFSSBX+i5UFqwOpAMAyvIZ4LH0uDMAAAAASUVORK5CYII=
-      filters.innerHTML = '\
-				<filter id="haram-filter-blocked" x="0" y="0">\
-					<feGaussianBlur in="SourceGraphic" stdDeviation="25" result="blur"/>\
-					<feImage xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAALAgMAAAAcrnVjAAAACVBMVEUAAAD/AAD///9nGWQeAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB+MEFhUCN0yQyxkAAAA8SURBVAjXY1gFBgsYpoaCQALDLDA/gWHGooYGpUUgWqtrEYhWaupapASkm1Y0LGgCiTOBxWHqYfqh5gEA5x4oFe15PC8AAAAASUVORK5CYII=" x="20" y="20" width="26" height="11" result="logo"/>\
-					<feMerge x="0%" y="0%" result="result">\
-						<feMergeNode in="blur"/>\
-						<feMergeNode in="logo"/>\
-					</feMerge>\
-				</filter>\
-				<filter id="haram-filter-analyzing" x="0" y="0">\
-					<feGaussianBlur in="SourceGraphic" stdDeviation="25" result="blur"/>\
-					<feImage xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADcAAAALAQMAAADhrYfTAAAABlBMVEUAAAD///+l2Z/dAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAENJREFUCNdj+A8G/xgaGECAiWE/mP+LYXPO3Qvdzr8Y1mbHXr8dD6S143bfDP7FsNAjvvZWNEjcuaDbaRVcPUw/1DwAd5swvnCFq9QAAAAASUVORK5CYII=" x="20" y="20" width="55" height="11" result="logo"/>\
-					<feMerge x="0%" y="0%" result="result">\
-						<feMergeNode in="blur"/>\
-						<feMergeNode in="logo"/>\
-					</feMerge>\
-				</filter>\
-			';
-      document.head.appendChild(filters);
-
-      let style = document.createElement('style');
-      style.type = 'text/css';
-      style.innerHTML = "\
-				.haram-filter-blocked  {\
-					filter: url(#haram-filter-blocked);\
-				}\
-				.haram-filter-analyzing  {\
-					filter: url(#haram-filter-analyzing);\
-				}\
-			";
-      document.head.appendChild(style);
-    }, false);
+    setInterval(() => {
+      this.sendMedia();
+    }, 1000);
+    
+    this.receiveMedia();
   },
 
-  addListener: function () {
+  // Send media to the background script
+  sendMedia: function () {
+    // Get all media
+    // currently supports images only
+    let media = document.document.querySelector('img, image');
+    for (let i = 0; i < media.length; i++) {
+       // looking for new images only
+       // matching hvf-analyzing and hvf-analyzed classes
+      if(media[i].classList.contains("hvf-analyz")) continue;
+
+      // add class to mark image as being analyzing
+      media[i].classList.add("hvf-analyzing");
+
+      // Get image url and src attribute
+      let url = media[i].src;
+      let srcAttr = 'src';
+      if (!url || url.length === 0) {
+        url = media[i].getAttribute('xlink:href');
+        srcAttr = 'xlink:href';
+      }
+
+      if (url && url.length > 0) {
+      
+
+        browser.runtime.sendMessage({
+          action: 'HVF-MEDIA-ANALYSIS-REQUEST',
+          payload: { 
+            mediaUrl: url,
+            mediaType: 'image',
+            returnObject:{
+              originalUrl: url,
+              domObject: media[i],
+              srcAttr: srcAttr,
+              shouldMask: false
+            }
+           },
+        }, (result) => {
+          if (!chrome.runtime.lastError) {
+             // message processing code goes here
+          } else {
+            // error handling code goes here
+          }
+        });
+
+
+      }
+    }
+  },
+
+  // Receive media from the background script
+  receiveMedia: function () {
+    browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message && message.action === 'HVF-MEDIA-ANALYSIS-REPORT') {
+
+        let media = message.payload.returnObject.domObject;
+        let srcAttr = message.payload.returnObject.srcAttr;
+        let originalUrl = message.payload.returnObject.originalUrl;
+
+        if (message.payload.shouldMask && message.payload.maskedUrl) {
+          media.classList.add("hvf-masked");
+          media.setAttribute(srcAttr, message.payload.maskedUrl);
+          media.setAttribute("data-hvf-original-url", originalUrl);
+        }
+
+        media.classList.add("hvf-analyzed");
+        media.classList.remove("hvf-analyzing");
+
+      }
+    });
+  },
+
+  addListener__old: function () {
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // console.log(message);
       if (message && message.action === 'HARAM-IMAGE-ANALYSIS-REPORT') {
