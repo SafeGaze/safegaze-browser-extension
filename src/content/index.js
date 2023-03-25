@@ -7,21 +7,25 @@ const hvf = {
     this.receiveMedia();
 
     // wait for the page to load
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        this.listenUrlUpdate();
-      }, 1000);
-    }, false);
+    window.addEventListener(
+      "load",
+      () => {
+        setTimeout(() => {
+          this.listenUrlUpdate();
+        }, 1000);
+      },
+      false
+    );
   },
 
   isElementInViewport: function (el) {
     let rect = el.getBoundingClientRect();
-    let result = (
+    let result =
       rect.top >= 0 &&
       rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    )
+      rect.bottom <=
+        (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
     // console.log(result);
 
@@ -29,16 +33,19 @@ const hvf = {
   },
 
   throttle: function (callback, limit) {
-    var waiting = false;                      // Initially, we're not waiting
-    return function () {                      // We return a throttled function
-      if (!waiting) {                       // If we're not waiting
-        callback.apply(this, arguments);  // Execute users function
-        waiting = true;                   // Prevent future invocations
-        setTimeout(function () {          // After a period of time
-          waiting = false;              // And allow future invocations
+    var waiting = false; // Initially, we're not waiting
+    return function () {
+      // We return a throttled function
+      if (!waiting) {
+        // If we're not waiting
+        callback.apply(this, arguments); // Execute users function
+        waiting = true; // Prevent future invocations
+        setTimeout(function () {
+          // After a period of time
+          waiting = false; // And allow future invocations
         }, limit);
       }
-    }
+    };
   },
 
   triggerScanning: function () {
@@ -50,9 +57,15 @@ const hvf = {
     // console.log("sending Media");
     // Get all media
     // currently supports images only
-    let media = document.querySelectorAll('img, image');
+    let media = document.querySelectorAll("body *");
 
     for (let i = 0; i < media.length; i++) {
+      // Is it background image?
+      const backgroundImage =
+        window.getComputedStyle(media[i]).backgroundImage ||
+        media[i].style.backgroundImage;
+      const backgroundImageUrl = backgroundImage.slice(5, -2);
+      const hasBackgroundImage = backgroundImage?.startsWith("url(");
       // console.log('foo');
       // looking for new images only
       // matching hvf-analyzing and hvf-analyzed classes
@@ -61,23 +74,36 @@ const hvf = {
         media[i].classList.contains("hvf-too-many-render") ||
         media[i].classList.contains("hvf-analyzing") ||
         media[i].classList.contains("hvf-analyzed") ||
-        this.isElementInViewport(media[i]) === false
+        (media[i].classList.contains("hvf-invalid") &&
+          media[i].tagName !== "IMG" &&
+          media[i].tagName !== "image") ||
+        this.isElementInViewport(media[i]) === false ||
+        (!hasBackgroundImage &&
+          media[i].tagName !== "IMG" &&
+          media[i].tagName !== "image")
       ) {
         continue;
-      };
+      }
 
       // Get image url and src attribute
       let url = media[i].src;
-      let srcAttr = 'src';
+      let srcAttr = "src";
       if (!url || url.length === 0) {
-        url = media[i].getAttribute('xlink:href');
-        srcAttr = 'xlink:href';
+        url = media[i].getAttribute("xlink:href");
+        srcAttr = "xlink:href";
+      }
+      // If has background image then updating the url
+      if (hasBackgroundImage && media[i].tagName !== "IMG") {
+        url = backgroundImageUrl;
       }
 
       let isLoaded = media[i].complete && media[i].naturalHeight !== 0;
 
-      if (isLoaded && url && url.length > 0) {
-
+      if (
+        (media[i].tagName == "image" || hasBackgroundImage || isLoaded) &&
+        url &&
+        url.length > 0
+      ) {
         // let renderCycle = media[i].getAttribute('hvf-render-cycle');
         // if (renderCycle && +renderCycle > 10) {
         //   media[i].classList.add("hvf-too-many-render");
@@ -92,27 +118,33 @@ const hvf = {
         // console.log(this.domObjectIndex);
         let payload = {
           mediaUrl: url,
-          mediaType: 'image',
+          mediaType:
+            hasBackgroundImage &&
+            media[i].tagName !== "IMG" &&
+            media[i].tagName !== "image"
+              ? "backgroundImage"
+              : "image",
           baseObject: {
             originalUrl: url,
             domObjectIndex: this.domObjectIndex,
             srcAttr: srcAttr,
-            shouldMask: false
-          }
+            shouldMask: false,
+          },
         };
 
-        chrome.runtime.sendMessage({
-          action: 'HVF-MEDIA-ANALYSIS-REQUEST',
-          payload: payload,
-        }, (result) => {
-          if (!chrome.runtime.lastError) {
-            // message processing code goes here
-          } else {
-            // error handling code goes here
+        chrome.runtime.sendMessage(
+          {
+            action: "HVF-MEDIA-ANALYSIS-REQUEST",
+            payload: payload,
+          },
+          (result) => {
+            if (!chrome.runtime.lastError) {
+              // message processing code goes here
+            } else {
+              // error handling code goes here
+            }
           }
-        });
-
-
+        );
       }
     }
   },
@@ -120,8 +152,7 @@ const hvf = {
   // Receive media from the background script
   receiveMedia: function () {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message && message.action === 'HVF-MEDIA-ANALYSIS-REPORT') {
-
+      if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
         let index = message.payload.baseObject.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
 
@@ -134,35 +165,38 @@ const hvf = {
 
         if (message.payload.shouldMask && message.payload.maskedUrl) {
           media.classList.add("hvf-masked");
-          media.setAttribute(srcAttr, message.payload.maskedUrl);
+          if (message.payload.mediaType === "backgroundImage") {
+            media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
+          } else {
+            media.setAttribute(srcAttr, message.payload.maskedUrl);
+          }
           media.setAttribute("data-hvf-original-url", originalUrl);
         }
-
-        // console.log(message.payload.invalidMedia);
 
         if (message.payload.invalidMedia === true) {
           media.classList.add("hvf-invalid");
         } else {
           media.classList.add("hvf-analyzed");
+          media.classList.remove("hvf-invalid");
         }
-
         media.classList.remove("hvf-analyzing");
-        media.classList.remove("hvf-invalid");
-
       }
     });
   },
 
   listenUrlUpdate: function () {
-
     // Callback function to execute when mutations are observed
     let observer = new MutationObserver((mutationList) => {
       for (const mutation of mutationList) {
-        if (mutation.type !== 'attributes') {
+        if (mutation.type !== "attributes") {
           continue;
         }
 
-        if (mutation.attributeName !== 'src' && mutation.attributeName !== 'xlink:href') {
+        if (
+          mutation.attributeName !== "src" &&
+          mutation.attributeName !== "xlink:href" &&
+          mutation.attributeName !== "style"
+        ) {
           continue;
         }
 
@@ -178,10 +212,12 @@ const hvf = {
 
         if (
           mutation.type === "attributes" &&
-          mutation.target.classList.contains("hvf-analyzed")
+          (mutation.target.classList.contains("hvf-analyzed") ||
+            mutation.target.classList.contains("hvf-invalid"))
         ) {
           mutation.target.classList.remove("hvf-analyzed");
           mutation.target.classList.remove("hvf-analyzing");
+          mutation.target.classList.remove("hvf-invalid");
         }
       }
 
@@ -196,9 +232,14 @@ const hvf = {
     });
 
     // Start observing the scroll event
-    document.addEventListener("scroll", () => { hvf.triggerScanning() }, true);
+    document.addEventListener(
+      "scroll",
+      () => {
+        hvf.triggerScanning();
+      },
+      true
+    );
   },
-
 };
 
 hvf.init();

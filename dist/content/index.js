@@ -5,11 +5,15 @@ var hvf = {
   init: function() {
     this.triggerScanning();
     this.receiveMedia();
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        this.listenUrlUpdate();
-      }, 1e3);
-    }, false);
+    window.addEventListener(
+      "load",
+      () => {
+        setTimeout(() => {
+          this.listenUrlUpdate();
+        }, 1e3);
+      },
+      false
+    );
   },
   isElementInViewport: function(el) {
     let rect = el.getBoundingClientRect();
@@ -33,26 +37,31 @@ var hvf = {
   },
   // Send media to the background script
   sendMedia: function() {
-    let media = document.querySelectorAll("img, image");
+    let media = document.querySelectorAll("body *");
     for (let i = 0; i < media.length; i++) {
-      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false) {
+      const backgroundImage = window.getComputedStyle(media[i]).backgroundImage || media[i].style.backgroundImage;
+      const backgroundImageUrl = backgroundImage.slice(5, -2);
+      const hasBackgroundImage = backgroundImage?.startsWith("url(");
+      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || media[i].classList.contains("hvf-invalid") && media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
         continue;
       }
-      ;
       let url = media[i].src;
       let srcAttr = "src";
       if (!url || url.length === 0) {
         url = media[i].getAttribute("xlink:href");
         srcAttr = "xlink:href";
       }
+      if (hasBackgroundImage && media[i].tagName !== "IMG") {
+        url = backgroundImageUrl;
+      }
       let isLoaded = media[i].complete && media[i].naturalHeight !== 0;
-      if (isLoaded && url && url.length > 0) {
+      if ((media[i].tagName == "image" || hasBackgroundImage || isLoaded) && url && url.length > 0) {
         this.domObjectIndex++;
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
         let payload = {
           mediaUrl: url,
-          mediaType: "image",
+          mediaType: hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image" ? "backgroundImage" : "image",
           baseObject: {
             originalUrl: url,
             domObjectIndex: this.domObjectIndex,
@@ -60,14 +69,17 @@ var hvf = {
             shouldMask: false
           }
         };
-        chrome.runtime.sendMessage({
-          action: "HVF-MEDIA-ANALYSIS-REQUEST",
-          payload
-        }, (result) => {
-          if (!chrome.runtime.lastError) {
-          } else {
+        chrome.runtime.sendMessage(
+          {
+            action: "HVF-MEDIA-ANALYSIS-REQUEST",
+            payload
+          },
+          (result) => {
+            if (!chrome.runtime.lastError) {
+            } else {
+            }
           }
-        });
+        );
       }
     }
   },
@@ -83,16 +95,20 @@ var hvf = {
           return;
         if (message.payload.shouldMask && message.payload.maskedUrl) {
           media.classList.add("hvf-masked");
-          media.setAttribute(srcAttr, message.payload.maskedUrl);
+          if (message.payload.mediaType === "backgroundImage") {
+            media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
+          } else {
+            media.setAttribute(srcAttr, message.payload.maskedUrl);
+          }
           media.setAttribute("data-hvf-original-url", originalUrl);
         }
         if (message.payload.invalidMedia === true) {
           media.classList.add("hvf-invalid");
         } else {
           media.classList.add("hvf-analyzed");
+          media.classList.remove("hvf-invalid");
         }
         media.classList.remove("hvf-analyzing");
-        media.classList.remove("hvf-invalid");
       }
     });
   },
@@ -102,7 +118,7 @@ var hvf = {
         if (mutation.type !== "attributes") {
           continue;
         }
-        if (mutation.attributeName !== "src" && mutation.attributeName !== "xlink:href") {
+        if (mutation.attributeName !== "src" && mutation.attributeName !== "xlink:href" && mutation.attributeName !== "style") {
           continue;
         }
         if (mutation.target.classList.contains("hvf-analyzed")) {
@@ -112,9 +128,10 @@ var hvf = {
         if (mutation.target.tagName === "image") {
           mutationImgUrl = mutation.target.getAttribute("xlink:href");
         }
-        if (mutation.type === "attributes" && mutation.target.classList.contains("hvf-analyzed")) {
+        if (mutation.type === "attributes" && (mutation.target.classList.contains("hvf-analyzed") || mutation.target.classList.contains("hvf-invalid"))) {
           mutation.target.classList.remove("hvf-analyzed");
           mutation.target.classList.remove("hvf-analyzing");
+          mutation.target.classList.remove("hvf-invalid");
         }
       }
       this.triggerScanning();
@@ -124,9 +141,13 @@ var hvf = {
       subtree: true,
       attributes: true
     });
-    document.addEventListener("scroll", () => {
-      hvf.triggerScanning();
-    }, true);
+    document.addEventListener(
+      "scroll",
+      () => {
+        hvf.triggerScanning();
+      },
+      true
+    );
   }
 };
 hvf.init();
