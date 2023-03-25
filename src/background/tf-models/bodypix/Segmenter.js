@@ -3,11 +3,11 @@ import * as bodySegmentation from '@tensorflow-models/body-segmentation';
 export default class Segmenter {
 
     bodySegmenterConfig = {
-        // architecture: 'ResNet50',
-        architecture: 'MobileNetV1',
-        outputStride: 16,
+        architecture: 'ResNet50',
+        // architecture: 'MobileNetV1',
+        outputStride: 32,
         quantBytes: 2,
-        multiplier: 1,
+        // multiplier: 1,
     };
 
     bodySegmentationConfig = {

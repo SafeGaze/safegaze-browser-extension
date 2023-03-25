@@ -6,6 +6,7 @@ export default class DrawMask {
     }
 
     draw = async (ctx, imageData, segmentationData, genderData) => {
+        genderData = [];
         let data = imageData.data;
         let skipMasking = false;
 
@@ -44,7 +45,7 @@ export default class DrawMask {
             }
 
             // if the box is found, we will skip the masking.
-            if(skipMasking === true) continue;
+            // if(skipMasking === true) continue;
 
             for (let i = 0; i < data.length; i += 4) {
 

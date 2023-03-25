@@ -1,5 +1,7 @@
-// import * as helper from '../..helpers/index.js';
-
+import * as tf from `@tensorflow/tfjs`;
+import GenderFaceDetection from '../tf-models/face-api/GenderFaceDetection.js';
+import Segmenter from '../tf-models/bodypix/Segmenter.js';
+import DrawMask from '../tf-models/mask/DrawMask.js';
 class analyzer {
     constructor() {
         // canvas
@@ -11,30 +13,23 @@ class analyzer {
 
     init = async () => {
 
-        return;
-        
-        // load image
-        const image = document.getElementById('people-img');
-        console.time('model loading');
-
         // load tfjs
         await tf.setBackend('webgl');
         await tf.ready();
 
         // tfjs optimizations
-        if (tf?.env().flagRegistry.CANVAS2D_WILL_READ_FREQUENTLY) tf.env().set('CANVAS2D_WILL_READ_FREQUENTLY', true);
-        if (tf?.env().flagRegistry.WEBGL_EXP_CONV) tf.env().set('WEBGL_EXP_CONV', true);
-        if (tf?.env().flagRegistry.WEBGL_EXP_CONV) tf.env().set('WEBGL_EXP_CONV', true);
         await tf.enableProdMode();
         await tf.ready();
 
         // faceapi
-        const genderFaceDetection = new GenderFaceDetection();
-        await genderFaceDetection.load();
+        // this.genderFaceDetection = new GenderFaceDetection();
+        // await this.genderFaceDetection.load();
+        // console.log('faceapi loaded');
 
         // bodypix
-        const segmenter = new Segmenter();
-        await segmenter.load();
+        this.segmenter = new Segmenter();
+        await this.segmenter.load();
+        console.log('faceapi loaded');
     };
 
     // draws the image to the canvas and returns the image data
@@ -70,28 +65,36 @@ class analyzer {
 
     analyze = async (data) => {
         this.data = data;
+        let imageData = null;
+
         try {
-            let imageData = await this.drawImage(data.mediaUrl);
+            imageData = await this.drawImage(data.mediaUrl);
         } catch (error) {
             return {
                 shouldMask: false,
                 maskedUrl: null,
                 invalidMedia: true
             };
-        }
+        }      
 
+        const [people] = await Promise.all([
+            // genderFaceDetection.detect(this.frameCanvas),
+            this.segmenter.segment(imageData)
+        ]);
 
-        // testing
+        const drawMask = new DrawMask();
+        await drawMask.draw(this.frameCtx, imageData, people, null);
 
-        this.frameCtx.fillStyle = "#FF0000";
-        this.frameCtx.fillRect(10, 10, 30, 20);
-        this.frameCtx.fillStyle = "#00FF00";
-        this.frameCtx.font = "40px Arial";
-        this.frameCtx.fillText("filtered" + this.n, 10, 40);
+              // testing
+              this.frameCtx.fillStyle = "#FF0000";
+              this.frameCtx.fillRect(10, 10, 30, 20);
+              this.frameCtx.fillStyle = "#00FF00";
+              this.frameCtx.font = "40px Arial";
+              this.frameCtx.fillText("filtered" + this.n, 10, 40);
+              this.n++;
 
         let blob = await this.canvasToBlob(this.frameCanvas);
         let base64 = await this.blobToBase64(blob);
-        this.n++;
 
         return {
             shouldMask: true,
