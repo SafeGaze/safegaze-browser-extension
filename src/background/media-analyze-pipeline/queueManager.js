@@ -14,7 +14,7 @@ const queueManager = {
     },
 
     addToQueue: async function (data) {
-        console.log('addToQueue', data.baseObject.domObjectIndex);
+        // console.log('addToQueue', data.baseObject.domObjectIndex);
         this.dataQueue.push(data);
         if (!this.isAnalyzing) {
             this.processQueue();
@@ -41,7 +41,7 @@ const queueManager = {
         let data = this.dataQueue.shift();
         let result = await this.analyzer.analyze(data);
 
-        console.log('addToQueue', data.baseObject.domObjectIndex, data.mediaUrl, result);
+        // console.log('addToQueue', data.baseObject.domObjectIndex, data.mediaUrl, result);
 
         if(result === null) {
             this.processQueue();

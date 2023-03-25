@@ -3,7 +3,7 @@ var hvf = {
   domObjectIndex: 0,
   // Initialize the extension
   init: function() {
-    this.sendMedia();
+    this.triggerScanning();
     this.receiveMedia();
     window.addEventListener("load", () => {
       setTimeout(() => {
@@ -11,12 +11,31 @@ var hvf = {
       }, 1e3);
     }, false);
   },
+  isElementInViewport: function(el) {
+    let rect = el.getBoundingClientRect();
+    let result = rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+    return result;
+  },
+  throttle: function(callback, limit) {
+    var waiting = false;
+    return function() {
+      if (!waiting) {
+        callback.apply(this, arguments);
+        waiting = true;
+        setTimeout(function() {
+          waiting = false;
+        }, limit);
+      }
+    };
+  },
+  triggerScanning: function() {
+    this.throttle(this.sendMedia(), 1e3);
+  },
   // Send media to the background script
   sendMedia: function() {
     let media = document.querySelectorAll("img, image");
     for (let i = 0; i < media.length; i++) {
-      console.log("foo");
-      if (media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed")) {
+      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false) {
         continue;
       }
       ;
@@ -31,7 +50,6 @@ var hvf = {
         this.domObjectIndex++;
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
-        console.log(this.domObjectIndex);
         let payload = {
           mediaUrl: url,
           mediaType: "image",
@@ -59,7 +77,6 @@ var hvf = {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
         let index = message.payload.baseObject.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
-        console.log(message.payload);
         let srcAttr = message.payload.baseObject.srcAttr;
         let originalUrl = message.payload.baseObject.originalUrl;
         if (!media)
@@ -69,7 +86,6 @@ var hvf = {
           media.setAttribute(srcAttr, message.payload.maskedUrl);
           media.setAttribute("data-hvf-original-url", originalUrl);
         }
-        console.log(message.payload.invalidMedia);
         if (message.payload.invalidMedia === true) {
           media.classList.add("hvf-invalid");
         } else {
@@ -101,6 +117,7 @@ var hvf = {
           mutation.target.classList.remove("hvf-analyzing");
         }
       }
+      this.triggerScanning();
     });
     observer.observe(document.body, {
       childList: true,
@@ -108,7 +125,7 @@ var hvf = {
       attributes: true
     });
     document.addEventListener("scroll", () => {
-      hvf.sendMedia();
+      hvf.triggerScanning();
     }, true);
   }
 };

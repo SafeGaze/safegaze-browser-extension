@@ -7,6 +7,23 @@ var analyzer = class {
     this.n = 0;
   }
   init = async () => {
+    return;
+    const image = document.getElementById("people-img");
+    console.time("model loading");
+    await tf.setBackend("webgl");
+    await tf.ready();
+    if (tf?.env().flagRegistry.CANVAS2D_WILL_READ_FREQUENTLY)
+      tf.env().set("CANVAS2D_WILL_READ_FREQUENTLY", true);
+    if (tf?.env().flagRegistry.WEBGL_EXP_CONV)
+      tf.env().set("WEBGL_EXP_CONV", true);
+    if (tf?.env().flagRegistry.WEBGL_EXP_CONV)
+      tf.env().set("WEBGL_EXP_CONV", true);
+    await tf.enableProdMode();
+    await tf.ready();
+    const genderFaceDetection = new GenderFaceDetection();
+    await genderFaceDetection.load();
+    const segmenter = new Segmenter();
+    await segmenter.load();
   };
   // draws the image to the canvas and returns the image data
   drawImage = async (imageUrl) => {
@@ -70,7 +87,6 @@ var queueManager = {
     await this.analyzer.init();
   },
   addToQueue: async function(data) {
-    console.log("addToQueue", data.baseObject.domObjectIndex);
     this.dataQueue.push(data);
     if (!this.isAnalyzing) {
       this.processQueue();
@@ -91,7 +107,6 @@ var queueManager = {
     this.isAnalyzing = true;
     let data = this.dataQueue.shift();
     let result = await this.analyzer.analyze(data);
-    console.log("addToQueue", data.baseObject.domObjectIndex, data.mediaUrl, result);
     if (result === null) {
       this.processQueue();
       return;

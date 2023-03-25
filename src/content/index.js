@@ -3,7 +3,7 @@ const hvf = {
 
   // Initialize the extension
   init: function () {
-    this.sendMedia();
+    this.triggerScanning();
     this.receiveMedia();
 
     // wait for the page to load
@@ -14,6 +14,37 @@ const hvf = {
     }, false);
   },
 
+  isElementInViewport: function (el) {
+    let rect = el.getBoundingClientRect();
+    let result = (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    )
+
+    // console.log(result);
+
+    return result;
+  },
+
+  throttle: function (callback, limit) {
+    var waiting = false;                      // Initially, we're not waiting
+    return function () {                      // We return a throttled function
+      if (!waiting) {                       // If we're not waiting
+        callback.apply(this, arguments);  // Execute users function
+        waiting = true;                   // Prevent future invocations
+        setTimeout(function () {          // After a period of time
+          waiting = false;              // And allow future invocations
+        }, limit);
+      }
+    }
+  },
+
+  triggerScanning: function () {
+    this.throttle(this.sendMedia(), 1000);
+  },
+
   // Send media to the background script
   sendMedia: function () {
     // console.log("sending Media");
@@ -22,16 +53,18 @@ const hvf = {
     let media = document.querySelectorAll('img, image');
 
     for (let i = 0; i < media.length; i++) {
-      console.log('foo');
+      // console.log('foo');
       // looking for new images only
       // matching hvf-analyzing and hvf-analyzed classes
-      if (media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed")) {
+      if (
+        media[i].classList.contains("hvf-unidentified-error") ||
+        media[i].classList.contains("hvf-too-many-render") ||
+        media[i].classList.contains("hvf-analyzing") ||
+        media[i].classList.contains("hvf-analyzed") ||
+        this.isElementInViewport(media[i]) === false
+      ) {
         continue;
       };
-      // console.log(media[i].classList)
-
-      // add class to mark image as being analyzing
-      
 
       // Get image url and src attribute
       let url = media[i].src;
@@ -45,11 +78,18 @@ const hvf = {
 
       if (isLoaded && url && url.length > 0) {
 
+        // let renderCycle = media[i].getAttribute('hvf-render-cycle');
+        // if (renderCycle && +renderCycle > 10) {
+        //   media[i].classList.add("hvf-too-many-render");
+        //   // continue;
+        // }
+        // media[i].setAttribute("hvf-render-cycle", (+renderCycle + 1 || 1));
+
         this.domObjectIndex++;
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
 
-        console.log(this.domObjectIndex);
+        // console.log(this.domObjectIndex);
         let payload = {
           mediaUrl: url,
           mediaType: 'image',
@@ -84,8 +124,8 @@ const hvf = {
 
         let index = message.payload.baseObject.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
-        
-        console.log(message.payload);
+
+        // console.log(message.payload);
 
         let srcAttr = message.payload.baseObject.srcAttr;
         let originalUrl = message.payload.baseObject.originalUrl;
@@ -98,11 +138,11 @@ const hvf = {
           media.setAttribute("data-hvf-original-url", originalUrl);
         }
 
-        console.log(message.payload.invalidMedia);
+        // console.log(message.payload.invalidMedia);
 
-        if(message.payload.invalidMedia === true) {
+        if (message.payload.invalidMedia === true) {
           media.classList.add("hvf-invalid");
-        }else{
+        } else {
           media.classList.add("hvf-analyzed");
         }
 
@@ -118,15 +158,15 @@ const hvf = {
     // Callback function to execute when mutations are observed
     let observer = new MutationObserver((mutationList) => {
       for (const mutation of mutationList) {
-        if(mutation.type !== 'attributes'){
-          continue;
-        }
-        
-        if(mutation.attributeName !== 'src' && mutation.attributeName !== 'xlink:href') {
+        if (mutation.type !== 'attributes') {
           continue;
         }
 
-        if(mutation.target.classList.contains("hvf-analyzed")) {
+        if (mutation.attributeName !== 'src' && mutation.attributeName !== 'xlink:href') {
+          continue;
+        }
+
+        if (mutation.target.classList.contains("hvf-analyzed")) {
           continue;
         }
 
@@ -145,7 +185,7 @@ const hvf = {
         }
       }
 
-      // this.sendMedia();
+      this.triggerScanning();
     });
 
     // Start observing the target node for configured mutations
@@ -156,7 +196,7 @@ const hvf = {
     });
 
     // Start observing the scroll event
-    document.addEventListener("scroll", () => {hvf.sendMedia()}, true);
+    document.addEventListener("scroll", () => { hvf.triggerScanning() }, true);
   },
 
 };

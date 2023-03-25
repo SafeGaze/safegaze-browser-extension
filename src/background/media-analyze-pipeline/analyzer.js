@@ -10,8 +10,31 @@ class analyzer {
     }
 
     init = async () => {
-        // load model
 
+        return;
+        
+        // load image
+        const image = document.getElementById('people-img');
+        console.time('model loading');
+
+        // load tfjs
+        await tf.setBackend('webgl');
+        await tf.ready();
+
+        // tfjs optimizations
+        if (tf?.env().flagRegistry.CANVAS2D_WILL_READ_FREQUENTLY) tf.env().set('CANVAS2D_WILL_READ_FREQUENTLY', true);
+        if (tf?.env().flagRegistry.WEBGL_EXP_CONV) tf.env().set('WEBGL_EXP_CONV', true);
+        if (tf?.env().flagRegistry.WEBGL_EXP_CONV) tf.env().set('WEBGL_EXP_CONV', true);
+        await tf.enableProdMode();
+        await tf.ready();
+
+        // faceapi
+        const genderFaceDetection = new GenderFaceDetection();
+        await genderFaceDetection.load();
+
+        // bodypix
+        const segmenter = new Segmenter();
+        await segmenter.load();
     };
 
     // draws the image to the canvas and returns the image data
@@ -30,18 +53,18 @@ class analyzer {
 
     blobToBase64 = (blob) => {
         return new Promise((resolve, _) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
         });
     };
 
     canvasToBlob = async (canvas) => {
         var blob = await canvas[
-            canvas.convertToBlob 
-              ? 'convertToBlob' // specs
-              : 'toBlob'        // current Firefox
-           ]();
+            canvas.convertToBlob
+                ? 'convertToBlob' // specs
+                : 'toBlob'        // current Firefox
+        ]();
         return blob;
     };
 
@@ -56,8 +79,8 @@ class analyzer {
                 invalidMedia: true
             };
         }
-        
-        
+
+
         // testing
 
         this.frameCtx.fillStyle = "#FF0000";
