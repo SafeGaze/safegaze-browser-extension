@@ -1,9 +1,8 @@
 const hvf = {
-  domObjects: [],
+  domObjectIndex: 0,
 
   // Initialize the extension
   init: function () {
-    console.log(this.domObjects);
     this.sendMedia();
     this.receiveMedia();
 
@@ -26,10 +25,13 @@ const hvf = {
       console.log('foo');
       // looking for new images only
       // matching hvf-analyzing and hvf-analyzed classes
-      if (media[i].classList.contains("hvf-analyz")) continue;
+      if (media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed")) {
+        continue;
+      };
+      // console.log(media[i].classList)
 
       // add class to mark image as being analyzing
-      media[i].classList.add("hvf-analyzing");
+      
 
       // Get image url and src attribute
       let url = media[i].src;
@@ -39,16 +41,21 @@ const hvf = {
         srcAttr = 'xlink:href';
       }
 
-      if (url && url.length > 0) {
+      let isLoaded = media[i].complete && media[i].naturalHeight !== 0;
 
-        let domObjectIndex = this.domObjects.push(media[i]);
-        console.log(domObjectIndex);
+      if (isLoaded && url && url.length > 0) {
+
+        this.domObjectIndex++;
+        media[i].classList.add("hvf-analyzing");
+        media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
+
+        console.log(this.domObjectIndex);
         let payload = {
           mediaUrl: url,
           mediaType: 'image',
           baseObject: {
             originalUrl: url,
-            domObjectIndex: domObjectIndex,
+            domObjectIndex: this.domObjectIndex,
             srcAttr: srcAttr,
             shouldMask: false
           }
@@ -75,8 +82,11 @@ const hvf = {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === 'HVF-MEDIA-ANALYSIS-REPORT') {
 
-        let media = this.domObjects[message.payload.baseObject.domObjectIndex];
-        console.log([this.domObjects, message.payload]);
+        let index = message.payload.baseObject.domObjectIndex;
+        let media = document.querySelector(".hvf-dom-id-" + index);
+        
+        console.log(media);
+
         let srcAttr = message.payload.baseObject.srcAttr;
         let originalUrl = message.payload.baseObject.originalUrl;
 
@@ -100,6 +110,18 @@ const hvf = {
     // Callback function to execute when mutations are observed
     let observer = new MutationObserver((mutationList) => {
       for (const mutation of mutationList) {
+        if(mutation.type !== 'attributes'){
+          continue;
+        }
+        
+        if(mutation.attributeName !== 'src' && mutation.attributeName !== 'xlink:href') {
+          continue;
+        }
+
+        if(mutation.target.classList.contains("hvf-analyzed")) {
+          continue;
+        }
+
         let mutationImgUrl = mutation.target.src;
 
         if (mutation.target.tagName === "image") {
@@ -115,15 +137,15 @@ const hvf = {
         }
       }
 
-      this.sendMedia();
+      // this.sendMedia();
     });
 
     // Start observing the target node for configured mutations
-    // observer.observe(document.body, {
-    //   childList: true,
-    //   subtree: true,
-    //   attributes: true,
-    // });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
 
     // Start observing the scroll event
     document.addEventListener("scroll", () => {hvf.sendMedia()}, true);

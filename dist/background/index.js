@@ -66,7 +66,7 @@ var queueManager = {
     await this.analyzer.init();
   },
   addToQueue: async function(data) {
-    console.log("addToQueue");
+    console.log("addToQueue", data.baseObject.domObjectIndex);
     this.dataQueue.push(data);
     if (!this.isAnalyzing) {
       this.processQueue();
@@ -80,7 +80,6 @@ var queueManager = {
     });
   },
   processQueue: async function() {
-    console.log("processQueue", this.dataQueue.length);
     if (this.dataQueue.length <= 0) {
       this.isAnalyzing = false;
       return;
@@ -88,6 +87,7 @@ var queueManager = {
     this.isAnalyzing = true;
     let data = this.dataQueue.shift();
     let result = await this.analyzer.analyze(data);
+    console.log("addToQueue", data.baseObject.domObjectIndex, data.mediaUrl, result);
     if (result === null) {
       this.processQueue();
       return;
