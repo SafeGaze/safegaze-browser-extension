@@ -44,18 +44,14 @@ const queueManager = {
         console.log('addToQueue', data.baseObject.domObjectIndex, data.mediaUrl, result);
 
         if(result === null) {
-
             this.processQueue();
             return;
         }
-
-        data.shouldMask = result.shouldMask;
-        data.maskedUrl = result.maskedUrl;
-
+        // console.log(Object.assign(data, result));
         chrome.tabs.sendMessage(data.tabID,
             {
                 action: "HVF-MEDIA-ANALYSIS-REPORT",
-                payload: data
+                payload: Object.assign(data, result)
             }, (result) => {
                 if (!chrome.runtime.lastError) {
                     // message processing code goes here

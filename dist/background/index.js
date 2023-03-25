@@ -37,7 +37,11 @@ var analyzer = class {
     try {
       let imageData = await this.drawImage(data.mediaUrl);
     } catch (error) {
-      return null;
+      return {
+        shouldMask: false,
+        maskedUrl: null,
+        invalidMedia: true
+      };
     }
     this.frameCtx.fillStyle = "#FF0000";
     this.frameCtx.fillRect(10, 10, 30, 20);
@@ -92,13 +96,11 @@ var queueManager = {
       this.processQueue();
       return;
     }
-    data.shouldMask = result.shouldMask;
-    data.maskedUrl = result.maskedUrl;
     chrome.tabs.sendMessage(
       data.tabID,
       {
         action: "HVF-MEDIA-ANALYSIS-REPORT",
-        payload: data
+        payload: Object.assign(data, result)
       },
       (result2) => {
         if (!chrome.runtime.lastError) {

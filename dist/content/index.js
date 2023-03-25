@@ -59,7 +59,7 @@ var hvf = {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
         let index = message.payload.baseObject.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
-        console.log(media);
+        console.log(message.payload);
         let srcAttr = message.payload.baseObject.srcAttr;
         let originalUrl = message.payload.baseObject.originalUrl;
         if (!media)
@@ -69,8 +69,14 @@ var hvf = {
           media.setAttribute(srcAttr, message.payload.maskedUrl);
           media.setAttribute("data-hvf-original-url", originalUrl);
         }
-        media.classList.add("hvf-analyzed");
+        console.log(message.payload.invalidMedia);
+        if (message.payload.invalidMedia === true) {
+          media.classList.add("hvf-invalid");
+        } else {
+          media.classList.add("hvf-analyzed");
+        }
         media.classList.remove("hvf-analyzing");
+        media.classList.remove("hvf-invalid");
       }
     });
   },

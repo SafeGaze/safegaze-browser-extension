@@ -50,7 +50,11 @@ class analyzer {
         try {
             let imageData = await this.drawImage(data.mediaUrl);
         } catch (error) {
-            return null;
+            return {
+                shouldMask: false,
+                maskedUrl: null,
+                invalidMedia: true
+            };
         }
         
         
