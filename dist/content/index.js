@@ -136,11 +136,6 @@ var hvf = {
       }
       this.triggerScanning();
     });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true
-    });
     document.addEventListener(
       "scroll",
       () => {

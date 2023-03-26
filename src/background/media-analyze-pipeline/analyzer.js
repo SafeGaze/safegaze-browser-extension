@@ -22,9 +22,9 @@ class analyzer {
         await tf.ready();
 
         // faceapi
-        // this.genderFaceDetection = new GenderFaceDetection();
-        // await this.genderFaceDetection.load();
-        // console.log('faceapi loaded');
+        this.genderFaceDetection = new GenderFaceDetection();
+        await this.genderFaceDetection.load();
+        console.log('faceapi loaded');
 
         // bodypix
         this.segmenter = new Segmenter();
@@ -75,29 +75,36 @@ class analyzer {
                 maskedUrl: null,
                 invalidMedia: true
             };
-        }      
+        }
 
-        const [people] = await Promise.all([
-            // genderFaceDetection.detect(this.frameCanvas),
+        const [genderData, people] = await Promise.all([
+            this.genderFaceDetection.detect(this.frameCanvas),
             this.segmenter.segment(imageData)
         ]);
 
         const drawMask = new DrawMask();
-        await drawMask.draw(this.frameCtx, imageData, people, null);
+        const shouldMask = await drawMask.draw(this.frameCtx, imageData, people, genderData);
 
-              // testing
-              this.frameCtx.fillStyle = "#FF0000";
-              this.frameCtx.fillRect(10, 10, 30, 20);
-              this.frameCtx.fillStyle = "#00FF00";
-              this.frameCtx.font = "40px Arial";
-              this.frameCtx.fillText("filtered" + this.n, 10, 40);
-              this.n++;
+        if (shouldMask === false) {
+            return {
+                shouldMask: false,
+                maskedUrl: null
+            }
+        }
+
+        // testing
+        this.frameCtx.fillStyle = "#FF0000";
+        this.frameCtx.fillRect(10, 10, 30, 20);
+        this.frameCtx.fillStyle = "#00FF00";
+        this.frameCtx.font = "40px Arial";
+        this.frameCtx.fillText("filtered" + this.n, 10, 40);
+        this.n++;
 
         let blob = await this.canvasToBlob(this.frameCanvas);
         let base64 = await this.blobToBase64(blob);
 
         return {
-            shouldMask: true,
+            shouldMask: shouldMask,
             maskedUrl: base64
         };
 

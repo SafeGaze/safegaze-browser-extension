@@ -225,11 +225,11 @@ const hvf = {
     });
 
     // Start observing the target node for configured mutations
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-    });
+    // observer.observe(document.body, {
+    //   childList: true,
+    //   subtree: true,
+    //   attributes: true,
+    // });
 
     // Start observing the scroll event
     document.addEventListener(

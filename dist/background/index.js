@@ -915,28 +915,28 @@ var require_alea = __commonJS({
   "node_modules/seedrandom/lib/alea.js"(exports, module) {
     (function(global2, module2, define2) {
       function Alea(seed) {
-        var me2 = this, mash = Mash();
-        me2.next = function() {
-          var t = 2091639 * me2.s0 + me2.c * 23283064365386963e-26;
-          me2.s0 = me2.s1;
-          me2.s1 = me2.s2;
-          return me2.s2 = t - (me2.c = t | 0);
+        var me3 = this, mash = Mash();
+        me3.next = function() {
+          var t = 2091639 * me3.s0 + me3.c * 23283064365386963e-26;
+          me3.s0 = me3.s1;
+          me3.s1 = me3.s2;
+          return me3.s2 = t - (me3.c = t | 0);
         };
-        me2.c = 1;
-        me2.s0 = mash(" ");
-        me2.s1 = mash(" ");
-        me2.s2 = mash(" ");
-        me2.s0 -= mash(seed);
-        if (me2.s0 < 0) {
-          me2.s0 += 1;
+        me3.c = 1;
+        me3.s0 = mash(" ");
+        me3.s1 = mash(" ");
+        me3.s2 = mash(" ");
+        me3.s0 -= mash(seed);
+        if (me3.s0 < 0) {
+          me3.s0 += 1;
         }
-        me2.s1 -= mash(seed);
-        if (me2.s1 < 0) {
-          me2.s1 += 1;
+        me3.s1 -= mash(seed);
+        if (me3.s1 < 0) {
+          me3.s1 += 1;
         }
-        me2.s2 -= mash(seed);
-        if (me2.s2 < 0) {
-          me2.s2 += 1;
+        me3.s2 -= mash(seed);
+        if (me3.s2 < 0) {
+          me3.s2 += 1;
         }
         mash = null;
       }
@@ -1007,26 +1007,26 @@ var require_xor128 = __commonJS({
   "node_modules/seedrandom/lib/xor128.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me2 = this, strseed = "";
-        me2.x = 0;
-        me2.y = 0;
-        me2.z = 0;
-        me2.w = 0;
-        me2.next = function() {
-          var t = me2.x ^ me2.x << 11;
-          me2.x = me2.y;
-          me2.y = me2.z;
-          me2.z = me2.w;
-          return me2.w ^= me2.w >>> 19 ^ t ^ t >>> 8;
+        var me3 = this, strseed = "";
+        me3.x = 0;
+        me3.y = 0;
+        me3.z = 0;
+        me3.w = 0;
+        me3.next = function() {
+          var t = me3.x ^ me3.x << 11;
+          me3.x = me3.y;
+          me3.y = me3.z;
+          me3.z = me3.w;
+          return me3.w ^= me3.w >>> 19 ^ t ^ t >>> 8;
         };
         if (seed === (seed | 0)) {
-          me2.x = seed;
+          me3.x = seed;
         } else {
           strseed += seed;
         }
         for (var k3 = 0; k3 < strseed.length + 64; k3++) {
-          me2.x ^= strseed.charCodeAt(k3) | 0;
-          me2.next();
+          me3.x ^= strseed.charCodeAt(k3) | 0;
+          me3.next();
         }
       }
       function copy(f, t) {
@@ -1081,31 +1081,31 @@ var require_xorwow = __commonJS({
   "node_modules/seedrandom/lib/xorwow.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me2 = this, strseed = "";
-        me2.next = function() {
-          var t = me2.x ^ me2.x >>> 2;
-          me2.x = me2.y;
-          me2.y = me2.z;
-          me2.z = me2.w;
-          me2.w = me2.v;
-          return (me2.d = me2.d + 362437 | 0) + (me2.v = me2.v ^ me2.v << 4 ^ (t ^ t << 1)) | 0;
+        var me3 = this, strseed = "";
+        me3.next = function() {
+          var t = me3.x ^ me3.x >>> 2;
+          me3.x = me3.y;
+          me3.y = me3.z;
+          me3.z = me3.w;
+          me3.w = me3.v;
+          return (me3.d = me3.d + 362437 | 0) + (me3.v = me3.v ^ me3.v << 4 ^ (t ^ t << 1)) | 0;
         };
-        me2.x = 0;
-        me2.y = 0;
-        me2.z = 0;
-        me2.w = 0;
-        me2.v = 0;
+        me3.x = 0;
+        me3.y = 0;
+        me3.z = 0;
+        me3.w = 0;
+        me3.v = 0;
         if (seed === (seed | 0)) {
-          me2.x = seed;
+          me3.x = seed;
         } else {
           strseed += seed;
         }
         for (var k3 = 0; k3 < strseed.length + 64; k3++) {
-          me2.x ^= strseed.charCodeAt(k3) | 0;
+          me3.x ^= strseed.charCodeAt(k3) | 0;
           if (k3 == strseed.length) {
-            me2.d = me2.x << 10 ^ me2.x >>> 4;
+            me3.d = me3.x << 10 ^ me3.x >>> 4;
           }
-          me2.next();
+          me3.next();
         }
       }
       function copy(f, t) {
@@ -1162,9 +1162,9 @@ var require_xorshift7 = __commonJS({
   "node_modules/seedrandom/lib/xorshift7.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me2 = this;
-        me2.next = function() {
-          var X3 = me2.x, i = me2.i, t, v, w;
+        var me3 = this;
+        me3.next = function() {
+          var X3 = me3.x, i = me3.i, t, v, w;
           t = X3[i];
           t ^= t >>> 7;
           v = t ^ t << 24;
@@ -1178,10 +1178,10 @@ var require_xorshift7 = __commonJS({
           t = t ^ t << 13;
           v ^= t ^ t << 9;
           X3[i] = v;
-          me2.i = i + 1 & 7;
+          me3.i = i + 1 & 7;
           return v;
         };
-        function init2(me3, seed2) {
+        function init2(me4, seed2) {
           var j3, w, X3 = [];
           if (seed2 === (seed2 | 0)) {
             w = X3[0] = seed2;
@@ -1199,13 +1199,13 @@ var require_xorshift7 = __commonJS({
             w = X3[7] = -1;
           else
             w = X3[j3];
-          me3.x = X3;
-          me3.i = 0;
+          me4.x = X3;
+          me4.i = 0;
           for (j3 = 256; j3 > 0; --j3) {
-            me3.next();
+            me4.next();
           }
         }
-        init2(me2, seed);
+        init2(me3, seed);
       }
       function copy(f, t) {
         t.x = f.x.slice();
@@ -1259,10 +1259,10 @@ var require_xor4096 = __commonJS({
   "node_modules/seedrandom/lib/xor4096.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me2 = this;
-        me2.next = function() {
-          var w = me2.w, X3 = me2.X, i = me2.i, t, v;
-          me2.w = w = w + 1640531527 | 0;
+        var me3 = this;
+        me3.next = function() {
+          var w = me3.w, X3 = me3.X, i = me3.i, t, v;
+          me3.w = w = w + 1640531527 | 0;
           v = X3[i + 34 & 127];
           t = X3[i = i + 1 & 127];
           v ^= v << 13;
@@ -1270,10 +1270,10 @@ var require_xor4096 = __commonJS({
           v ^= v >>> 15;
           t ^= t >>> 12;
           v = X3[i] = v ^ t;
-          me2.i = i;
+          me3.i = i;
           return v + (w ^ w >>> 16) | 0;
         };
-        function init2(me3, seed2) {
+        function init2(me4, seed2) {
           var t, v, i, j3, w, X3 = [], limit = 128;
           if (seed2 === (seed2 | 0)) {
             v = seed2;
@@ -1311,11 +1311,11 @@ var require_xor4096 = __commonJS({
             t ^= t >>> 12;
             X3[i] = v ^ t;
           }
-          me3.w = w;
-          me3.X = X3;
-          me3.i = i;
+          me4.w = w;
+          me4.X = X3;
+          me4.i = i;
         }
-        init2(me2, seed);
+        init2(me3, seed);
       }
       function copy(f, t) {
         t.i = f.i;
@@ -1372,31 +1372,31 @@ var require_tychei = __commonJS({
   "node_modules/seedrandom/lib/tychei.js"(exports, module) {
     (function(global2, module2, define2) {
       function XorGen(seed) {
-        var me2 = this, strseed = "";
-        me2.next = function() {
-          var b = me2.b, c = me2.c, d = me2.d, a = me2.a;
+        var me3 = this, strseed = "";
+        me3.next = function() {
+          var b = me3.b, c = me3.c, d = me3.d, a = me3.a;
           b = b << 25 ^ b >>> 7 ^ c;
           c = c - d | 0;
           d = d << 24 ^ d >>> 8 ^ a;
           a = a - b | 0;
-          me2.b = b = b << 20 ^ b >>> 12 ^ c;
-          me2.c = c = c - d | 0;
-          me2.d = d << 16 ^ c >>> 16 ^ a;
-          return me2.a = a - b | 0;
+          me3.b = b = b << 20 ^ b >>> 12 ^ c;
+          me3.c = c = c - d | 0;
+          me3.d = d << 16 ^ c >>> 16 ^ a;
+          return me3.a = a - b | 0;
         };
-        me2.a = 0;
-        me2.b = 0;
-        me2.c = 2654435769 | 0;
-        me2.d = 1367130551;
+        me3.a = 0;
+        me3.b = 0;
+        me3.c = 2654435769 | 0;
+        me3.d = 1367130551;
         if (seed === Math.floor(seed)) {
-          me2.a = seed / 4294967296 | 0;
-          me2.b = seed | 0;
+          me3.a = seed / 4294967296 | 0;
+          me3.b = seed | 0;
         } else {
           strseed += seed;
         }
         for (var k3 = 0; k3 < strseed.length + 20; k3++) {
-          me2.b ^= strseed.charCodeAt(k3) | 0;
-          me2.next();
+          me3.b ^= strseed.charCodeAt(k3) | 0;
+          me3.next();
         }
       }
       function copy(f, t) {
@@ -1510,7 +1510,7 @@ var require_seedrandom = __commonJS({
         );
       }
       function ARC4(key) {
-        var t, keylen = key.length, me2 = this, i = 0, j3 = me2.i = me2.j = 0, s = me2.S = [];
+        var t, keylen = key.length, me3 = this, i = 0, j3 = me3.i = me3.j = 0, s = me3.S = [];
         if (!keylen) {
           key = [keylen++];
         }
@@ -1521,14 +1521,14 @@ var require_seedrandom = __commonJS({
           s[i] = s[j3 = mask & j3 + key[i % keylen] + (t = s[i])];
           s[j3] = t;
         }
-        (me2.g = function(count2) {
-          var t2, r = 0, i2 = me2.i, j4 = me2.j, s2 = me2.S;
+        (me3.g = function(count2) {
+          var t2, r = 0, i2 = me3.i, j4 = me3.j, s2 = me3.S;
           while (count2--) {
             t2 = s2[i2 = mask & i2 + 1];
             r = r * width + s2[mask & (s2[i2] = s2[j4 = mask & j4 + t2]) + (s2[j4] = t2)];
           }
-          me2.i = i2;
-          me2.j = j4;
+          me3.i = i2;
+          me3.j = j4;
           return r;
         })(width);
       }
@@ -1611,14 +1611,14 @@ var require_seedrandom2 = __commonJS({
     var xorshift7 = require_xorshift7();
     var xor4096 = require_xor4096();
     var tychei = require_tychei();
-    var sr = require_seedrandom();
-    sr.alea = alea5;
-    sr.xor128 = xor128;
-    sr.xorwow = xorwow;
-    sr.xorshift7 = xorshift7;
-    sr.xor4096 = xor4096;
-    sr.tychei = tychei;
-    module.exports = sr;
+    var sr2 = require_seedrandom();
+    sr2.alea = alea5;
+    sr2.xor128 = xor128;
+    sr2.xorwow = xorwow;
+    sr2.xorshift7 = xorshift7;
+    sr2.xor4096 = xor4096;
+    sr2.tychei = tychei;
+    module.exports = sr2;
   }
 });
 
@@ -5321,7 +5321,7 @@ var require_selfie_segmentation = __commonJS({
         }
         return b;
       }
-      function V2(a, b, c) {
+      function V3(a, b, c) {
         if (null != c && "number" !== typeof c)
           throw Error("Value of float/double field must be a number|null|undefined, found " + typeof c + ": " + c);
         U2(a, b, c);
@@ -6468,11 +6468,11 @@ var require_selfie_segmentation = __commonJS({
                           var v = q2.data, B3 = v.setBoundingBox, J3 = w;
                           var I2 = t.la;
                           var u = new Qc();
-                          V2(u, 1, I2.sa);
-                          V2(u, 2, I2.ta);
-                          V2(u, 3, I2.height);
-                          V2(u, 4, I2.width);
-                          V2(u, 5, I2.rotation);
+                          V3(u, 1, I2.sa);
+                          V3(u, 2, I2.ta);
+                          V3(u, 3, I2.height);
+                          V3(u, 4, I2.width);
+                          V3(u, 5, I2.rotation);
                           U2(u, 6, I2.pa);
                           I2 = u.l();
                           B3.call(v, J3, I2);
@@ -6484,10 +6484,10 @@ var require_selfie_segmentation = __commonJS({
                               I2 = w;
                               u = Object.assign({}, u, { visibility: u.visibility ? u.visibility : 0 });
                               var C3 = new Lc();
-                              V2(C3, 1, u.x);
-                              V2(C3, 2, u.y);
-                              V2(C3, 3, u.z);
-                              u.visibility && V2(C3, 4, u.visibility);
+                              V3(C3, 1, u.x);
+                              V3(C3, 2, u.y);
+                              V3(C3, 3, u.z);
+                              u.visibility && V3(C3, 4, u.visibility);
                               u = C3.l();
                               J3.call(
                                 B3,
@@ -6497,7 +6497,7 @@ var require_selfie_segmentation = __commonJS({
                             }
                           if (t.ba)
                             for (v = 0; v < t.ba.length; ++v)
-                              B3 = q2.data, J3 = B3.addClassification, I2 = w, u = t.ba[v], C3 = new Z3(), V2(C3, 2, u.qa), u.index && U2(C3, 1, u.index), u.label && U2(C3, 3, u.label), u.displayName && U2(C3, 4, u.displayName), u = C3.l(), J3.call(B3, I2, u);
+                              B3 = q2.data, J3 = B3.addClassification, I2 = w, u = t.ba[v], C3 = new Z3(), V3(C3, 2, u.qa), u.index && U2(C3, 1, u.index), u.label && U2(C3, 3, u.label), u.displayName && U2(C3, 4, u.displayName), u = C3.l(), J3.call(B3, I2, u);
                         }
                         q2 = q2.data;
                         break a;
@@ -70409,6 +70409,85 @@ var version8 = {
   "tfjs": version7
 };
 
+// src/background/tf-models/face-api/offscreenCanvasPatch.js
+self.Canvas = self.HTMLCanvasElement = OffscreenCanvas;
+self.CanvasRenderingContext2D = OffscreenCanvasRenderingContext2D;
+function HTMLImageElement2() {
+}
+function HTMLVideoElement2() {
+}
+self.Image = HTMLImageElement2;
+self.Video = HTMLVideoElement2;
+function Storage() {
+  let _data = {};
+  this.clear = function() {
+    return _data = {};
+  };
+  this.getItem = function(id) {
+    return _data.hasOwnProperty(id) ? _data[id] : void 0;
+  };
+  this.removeItem = function(id) {
+    return delete _data[id];
+  };
+  this.setItem = function(id, val) {
+    return _data[id] = String(val);
+  };
+}
+var Document = class extends EventTarget {
+};
+self.document = new Document();
+self.window = self.Window = self;
+self.localStorage = new Storage();
+function createElement(element) {
+  switch (element) {
+    case "canvas":
+      let canvas = new Canvas(1, 1);
+      canvas.localName = "canvas";
+      canvas.nodeName = "CANVAS";
+      canvas.tagName = "CANVAS";
+      canvas.nodeType = 1;
+      canvas.innerHTML = "";
+      canvas.remove = () => {
+        console.log("nope");
+      };
+      return canvas;
+    default:
+      console.log("arg", element);
+      break;
+  }
+}
+document.createElement = createElement;
+document.location = self.location;
+if (false == "object") {
+  console.warn("Check failed: window");
+}
+if (typeof document === "undefined") {
+  console.warn("Check failed: document");
+}
+if (typeof HTMLImageElement2 === "undefined") {
+  console.warn("Check failed: HTMLImageElement");
+}
+if (typeof HTMLCanvasElement === "undefined") {
+  console.warn("Check failed: HTMLCanvasElement");
+}
+if (typeof HTMLVideoElement2 === "undefined") {
+  console.warn("Check failed: HTMLVideoElement");
+}
+if (typeof ImageData === "undefined") {
+  console.warn("Check failed: ImageData");
+}
+if (typeof CanvasRenderingContext2D === "undefined") {
+  console.warn("Check failed: CanvasRenderingContext2D");
+}
+self.window = window;
+self.document = document;
+self.HTMLImageElement = HTMLImageElement2;
+self.HTMLVideoElement = HTMLVideoElement2;
+var isBrowserCheck = typeof window === "object" && typeof document !== "undefined" && typeof HTMLImageElement2 !== "undefined" && typeof HTMLCanvasElement !== "undefined" && typeof HTMLVideoElement2 !== "undefined" && typeof ImageData !== "undefined" && typeof CanvasRenderingContext2D !== "undefined";
+if (!isBrowserCheck) {
+  throw new Error("Failed to monkey patch for face-api, face-api will fail");
+}
+
 // node_modules/@tensorflow/tfjs-backend-wasm/dist/index.js
 var dist_exports5 = {};
 __export(dist_exports5, {
@@ -74248,83 +74327,6 @@ registerBackend("wasm", async () => {
 }, WASM_PRIORITY);
 
 // src/background/tf-models/face-api/face-api.esm-nobundle.js
-self.Canvas = self.HTMLCanvasElement = OffscreenCanvas;
-self.CanvasRenderingContext2D = OffscreenCanvasRenderingContext2D;
-function HTMLImageElement2() {
-}
-function HTMLVideoElement2() {
-}
-self.Image = HTMLImageElement2;
-self.Video = HTMLVideoElement2;
-function Storage() {
-  let _data = {};
-  this.clear = function() {
-    return _data = {};
-  };
-  this.getItem = function(id) {
-    return _data.hasOwnProperty(id) ? _data[id] : void 0;
-  };
-  this.removeItem = function(id) {
-    return delete _data[id];
-  };
-  this.setItem = function(id, val) {
-    return _data[id] = String(val);
-  };
-}
-var Document = class extends EventTarget {
-};
-self.document = new Document();
-self.window = self.Window = self;
-self.localStorage = new Storage();
-function createElement(element) {
-  switch (element) {
-    case "canvas":
-      let canvas = new Canvas(1, 1);
-      canvas.localName = "canvas";
-      canvas.nodeName = "CANVAS";
-      canvas.tagName = "CANVAS";
-      canvas.nodeType = 1;
-      canvas.innerHTML = "";
-      canvas.remove = () => {
-        console.log("nope");
-      };
-      return canvas;
-    default:
-      console.log("arg", element);
-      break;
-  }
-}
-document.createElement = createElement;
-document.location = self.location;
-if (false == "object") {
-  console.warn("Check failed: window");
-}
-if (typeof document === "undefined") {
-  console.warn("Check failed: document");
-}
-if (typeof HTMLImageElement2 === "undefined") {
-  console.warn("Check failed: HTMLImageElement");
-}
-if (typeof HTMLCanvasElement === "undefined") {
-  console.warn("Check failed: HTMLCanvasElement");
-}
-if (typeof HTMLVideoElement2 === "undefined") {
-  console.warn("Check failed: HTMLVideoElement");
-}
-if (typeof ImageData === "undefined") {
-  console.warn("Check failed: ImageData");
-}
-if (typeof CanvasRenderingContext2D === "undefined") {
-  console.warn("Check failed: CanvasRenderingContext2D");
-}
-self.window = window;
-self.document = document;
-self.HTMLImageElement = HTMLImageElement2;
-self.HTMLVideoElement = HTMLVideoElement2;
-var isBrowserCheck = typeof window === "object" && typeof document !== "undefined" && typeof HTMLImageElement2 !== "undefined" && typeof HTMLCanvasElement !== "undefined" && typeof HTMLVideoElement2 !== "undefined" && typeof ImageData !== "undefined" && typeof CanvasRenderingContext2D !== "undefined";
-if (!isBrowserCheck) {
-  throw new Error("Failed to monkey patch for face-api, face-api will fail");
-}
 var lr = Object.defineProperty;
 var bo = Object.getOwnPropertyDescriptor;
 var go = Object.getOwnPropertyNames;
@@ -74731,11 +74733,14 @@ var Lt = class extends $ {
 function tt(o) {
   return o.detection instanceof E;
 }
+function At(o, t) {
+  return { ...o, ...{ detection: t } };
+}
 function Ue() {
   let o = window.fetch;
   if (!o)
     throw new Error("fetch - missing fetch implementation for browser environment");
-  return { Canvas: HTMLCanvasElement, CanvasRenderingContext2D, Image: HTMLImageElement2, ImageData, Video: HTMLVideoElement2, createCanvasElement: () => document.createElement("canvas"), createImageElement: () => document.createElement("img"), createVideoElement: () => document.createElement("video"), fetch: o, readFile: () => {
+  return { Canvas: HTMLCanvasElement, CanvasRenderingContext2D, Image: HTMLImageElement, ImageData, Video: HTMLVideoElement, createCanvasElement: () => document.createElement("canvas"), createImageElement: () => document.createElement("img"), createVideoElement: () => document.createElement("video"), fetch: o, readFile: () => {
     throw new Error("readFile - filesystem not available for browser environment");
   } };
 }
@@ -74778,7 +74783,7 @@ function Xe() {
   }, createCanvasElement: r, createImageElement: a, createVideoElement: s, fetch: i, ...c };
 }
 function Je() {
-  return typeof window == "object" && typeof document != "undefined" && typeof HTMLImageElement2 != "undefined" && typeof HTMLCanvasElement != "undefined" && typeof HTMLVideoElement2 != "undefined" && typeof ImageData != "undefined" && typeof CanvasRenderingContext2D != "undefined";
+  return typeof window == "object" && typeof document != "undefined" && typeof HTMLImageElement != "undefined" && typeof HTMLCanvasElement != "undefined" && typeof HTMLVideoElement != "undefined" && typeof ImageData != "undefined" && typeof CanvasRenderingContext2D != "undefined";
 }
 var C;
 function Co() {
@@ -74910,6 +74915,10 @@ function be(o, t) {
   let { width: r, height: a } = t || Bt(o), s = Rt({ width: r, height: a });
   return o instanceof e ? k(s).putImageData(o, 0, 0) : k(s).drawImage(o, 0, 0, r, a), s;
 }
+async function Pr(o, t) {
+  let e = t || _.getEnv().createCanvasElement(), [r, a, s] = o.shape.slice(R(o) ? 1 : 0), i = n.tidy(() => o.as3D(r, a, s).toInt());
+  return await n.browser.toPixels(i, e), i.dispose(), e;
+}
 function Qe(o) {
   let { Image: t, Canvas: e, Video: r } = _.getEnv();
   return o instanceof t || o instanceof e || o instanceof r;
@@ -75019,6 +75028,31 @@ async function M(o) {
         throw new Error(`toNetInput -${e(s)} tf.Tensor4D with batchSize ${i} passed, but not supported in input array`);
     }
   }), await Promise.all(r.map((a) => Qe(a) && Tr(a))), new rt(r, Array.isArray(o));
+}
+async function re(o, t) {
+  let { Canvas: e } = _.getEnv(), r = o;
+  if (!(o instanceof e)) {
+    let i = await M(o);
+    if (i.batchSize > 1)
+      throw new Error("extractFaces - batchSize > 1 not supported");
+    let c = i.getInput(0);
+    r = c instanceof e ? c : await Pr(c);
+  }
+  let a = k(r);
+  return t.map((i) => i instanceof E ? i.forSize(r.width, r.height).box.floor() : i).map((i) => i.clipAtImageBorders(r.width, r.height)).map(({ x: i, y: c, width: m, height: p2 }) => {
+    let u = Rt({ width: m, height: p2 });
+    return m > 0 && p2 > 0 && k(u).putImageData(a.getImageData(i, c, m, p2), 0, 0), u;
+  });
+}
+async function oe(o, t) {
+  if (!K(o) && !R(o))
+    throw new Error("extractFaceTensors - expected image tensor to be 3D or 4D");
+  if (R(o) && o.shape[0] > 1)
+    throw new Error("extractFaceTensors - batchSize > 1 not supported");
+  return n.tidy(() => {
+    let [e, r, a] = o.shape.slice(R(o) ? 1 : 0);
+    return t.map((c) => c instanceof E ? c.forSize(r, e).box : c).map((c) => c.clipAtImageBorders(r, e)).filter((c) => c.width > 0 && c.height > 0).map(({ x: c, y: m, width: p2, height: u }) => n.slice3d(o.as3D(e, r, a), [m, c, 0], [u, p2, a]));
+  });
 }
 async function mt(o, t) {
   let { fetch: e } = _.getEnv(), r = await e(o, t);
@@ -75395,6 +75429,9 @@ var Pe = class extends Vt {
 function Ar(o) {
   return o.expressions instanceof pt;
 }
+function tr(o, t) {
+  return { ...o, ...{ expressions: t } };
+}
 function So(o, t, e = 0.1, r) {
   (Array.isArray(t) ? t : [t]).forEach((s) => {
     let i = s instanceof pt ? s : Ar(s) ? s.expressions : void 0;
@@ -75406,6 +75443,26 @@ function So(o, t, e = 0.1, r) {
 }
 function Yt(o) {
   return tt(o) && o.landmarks instanceof $ && o.unshiftedLandmarks instanceof $ && o.alignedRect instanceof E;
+}
+function Lo(o) {
+  let t = (m) => m * 180 / Math.PI, e = (m, p2) => Math.sqrt((m._x - p2._x) ** 2 + (m._y - p2._y) ** 2), r = { roll: void 0, pitch: void 0, yaw: void 0 }, a = (m, p2, u) => {
+    let f = Math.floor(m._x - p2._x), l = Math.floor(p2._x - u._x);
+    return f - l;
+  }, s = (m, p2) => {
+    let u = Math.hypot(p2._x - m._x, p2._y - m._y), f = p2._y - m._y, l = Math.asin(f / u), d = t(l), b = Math.floor(90 - d), x = p2._x - m._x < 0 ? -1 : 1;
+    return b * x;
+  }, i = (m, p2, u) => {
+    let f = e(m, u), l = { _x: (m._x + u._x) / 2, _y: (m._y + u._y) / 2 }, d = e(p2, l), b = Math.atan(d / f), x = Math.floor(t(b)), w = l._y - p2._y < 0 ? -1 : 1;
+    return x * w;
+  };
+  if (!o || !o._positions || o._positions.length !== 68)
+    return r;
+  let c = o._positions;
+  return r.roll = s(c[27], c[66]), r.pitch = i(c[14], c[30], c[2]), r.yaw = a(c[14], c[33], c[2]), r;
+}
+function ie(o, t) {
+  let { box: e } = o.detection, r = t.shiftBy(e.x, e.y), a = r.align(), { imageDims: s } = o.detection, i = new E(o.detection.score, a.rescale(s.reverse()), s), c = Lo(t);
+  return { ...o, ...{ landmarks: r, unshiftedLandmarks: t, alignedRect: i, angle: c } };
 }
 var Fe = class {
   constructor(t = {}) {
@@ -75805,6 +75862,15 @@ var Ut = class extends I {
     return Ur(t);
   }
 };
+function ar(o, t) {
+  return { ...o, ...{ descriptor: t } };
+}
+function sr(o, t) {
+  return { ...o, ...{ age: t } };
+}
+function ir(o, t, e) {
+  return { ...o, ...{ gender: t, genderProbability: e } };
+}
 function zo(o, t) {
   function e(m, p2) {
     let u = n.tensor4d(o(9 * m), [3, 3, m, 1]), f = n.tensor1d(o(m)), l = n.tensor1d(o(m)), d = n.tensor1d(o(m)), b = n.tensor1d(o(m));
@@ -76202,6 +76268,24 @@ var Jt = class extends Pt {
     return super.extractParamsFromWeightMap(t);
   }
 };
+var Le = class extends J {
+  constructor() {
+    super(...arguments);
+    this._name = "TinyFaceDetectorOptions";
+  }
+};
+var V = class {
+  async then(t) {
+    return t(await this.run());
+  }
+  async run() {
+    throw new Error("ComposableTask - run is not implemented");
+  }
+};
+async function Ft(o, t, e, r, a = ({ alignedRect: s }) => s) {
+  let s = o.map((m) => Yt(m) ? a(m) : m.detection), i = r || (t instanceof n.Tensor ? await oe(t, s) : await re(t, s)), c = await e(i);
+  return i.forEach((m) => m instanceof n.Tensor && m.dispose()), c;
+}
 var uo = 0.4;
 var fo = [new g(1.603231, 2.094468), new g(6.041143, 7.080126), new g(2.882459, 3.518061), new g(4.266906, 5.178857), new g(9.041765, 10.66308)];
 var lo = [117.001, 114.697, 97.404];
@@ -76224,6 +76308,166 @@ var Zt = class extends Pt {
   }
 };
 var T = { ssdMobilenetv1: new wt(), tinyFaceDetector: new Zt(), tinyYolov2: new Jt(), faceLandmark68Net: new jt(), faceLandmark68TinyNet: new Ie(), faceRecognitionNet: new Ut(), faceExpressionNet: new Pe(), ageGenderNet: new Me() };
+var Ae = class extends V {
+  constructor(e, r, a) {
+    super();
+    this.parentTask = e;
+    this.input = r;
+    this.extractedFaces = a;
+  }
+};
+var Dt = class extends Ae {
+  async run() {
+    let t = await this.parentTask, e = await Ft(t, this.input, async (r) => Promise.all(r.map((a) => T.faceExpressionNet.predictExpressions(a))), this.extractedFaces);
+    return t.map((r, a) => tr(r, e[a]));
+  }
+  withAgeAndGender() {
+    return new Mt(this, this.input);
+  }
+};
+var ut = class extends Dt {
+  withAgeAndGender() {
+    return new lt(this, this.input);
+  }
+  withFaceDescriptors() {
+    return new ht(this, this.input);
+  }
+};
+var We = class extends V {
+  constructor(e, r, a) {
+    super();
+    this.parentTask = e;
+    this.input = r;
+    this.extractedFaces = a;
+  }
+};
+var Mt = class extends We {
+  async run() {
+    let t = await this.parentTask, e = await Ft(t, this.input, async (r) => Promise.all(r.map((a) => T.ageGenderNet.predictAgeAndGender(a))), this.extractedFaces);
+    return t.map((r, a) => {
+      let { age: s, gender: i, genderProbability: c } = e[a];
+      return sr(ir(r, i, c), s);
+    });
+  }
+  withFaceExpressions() {
+    return new Dt(this, this.input);
+  }
+};
+var lt = class extends Mt {
+  withFaceExpressions() {
+    return new ut(this, this.input);
+  }
+  withFaceDescriptors() {
+    return new ht(this, this.input);
+  }
+};
+var ke = class extends V {
+  constructor(e, r) {
+    super();
+    this.parentTask = e;
+    this.input = r;
+  }
+};
+var ht = class extends ke {
+  async run() {
+    let t = await this.parentTask;
+    return (await Ft(t, this.input, (r) => Promise.all(r.map((a) => T.faceRecognitionNet.computeFaceDescriptor(a))), null, (r) => r.landmarks.align(null, { useDlibAlignment: true }))).map((r, a) => ar(t[a], r));
+  }
+  withFaceExpressions() {
+    return new ut(this, this.input);
+  }
+  withAgeAndGender() {
+    return new lt(this, this.input);
+  }
+};
+var Be = class extends V {
+  constructor(e, r, a) {
+    super();
+    this.parentTask = e;
+    this.input = r;
+    this.useTinyLandmarkNet = a;
+  }
+  get landmarkNet() {
+    return this.useTinyLandmarkNet ? T.faceLandmark68TinyNet : T.faceLandmark68Net;
+  }
+};
+var Re = class extends Be {
+  async run() {
+    let t = await this.parentTask, e = t.map((i) => i.detection), r = this.input instanceof n.Tensor ? await oe(this.input, e) : await re(this.input, e), a = await Promise.all(r.map((i) => this.landmarkNet.detectLandmarks(i)));
+    return r.forEach((i) => i instanceof n.Tensor && i.dispose()), t.filter((i, c) => a[c]).map((i, c) => ie(i, a[c]));
+  }
+  withFaceExpressions() {
+    return new ut(this, this.input);
+  }
+  withAgeAndGender() {
+    return new lt(this, this.input);
+  }
+  withFaceDescriptors() {
+    return new ht(this, this.input);
+  }
+};
+var Oe = class extends V {
+  constructor(e, r = new z()) {
+    super();
+    this.input = e;
+    this.options = r;
+  }
+};
+var me = class extends Oe {
+  async run() {
+    let { input: t, options: e } = this, r;
+    if (e instanceof Le)
+      r = T.tinyFaceDetector.locateFaces(t, e);
+    else if (e instanceof z)
+      r = T.ssdMobilenetv1.locateFaces(t, e);
+    else if (e instanceof J)
+      r = T.tinyYolov2.locateFaces(t, e);
+    else
+      throw new Error("detectFaces - expected options to be instance of TinyFaceDetectorOptions | SsdMobilenetv1Options | TinyYolov2Options");
+    return r;
+  }
+  runAndExtendWithFaceDetections() {
+    return new Promise((t, e) => {
+      this.run().then((r) => t(r.map((a) => At({}, a)))).catch((r) => e(r));
+    });
+  }
+  withFaceLandmarks(t = false) {
+    return new Re(this.runAndExtendWithFaceDetections(), this.input, t);
+  }
+  withFaceExpressions() {
+    return new Dt(this.runAndExtendWithFaceDetections(), this.input);
+  }
+  withAgeAndGender() {
+    return new Mt(this.runAndExtendWithFaceDetections(), this.input);
+  }
+};
+function mr(o, t = new z()) {
+  return new me(o, t);
+}
+
+// src/background/tf-models/face-api/GenderFaceDetection.js
+var GenderFaceDetection = class {
+  modelPath = "http://tf-person-masking-prototype.test/dist/face-api-models";
+  minScore = 0.3;
+  // minimum score
+  maxResults = 20;
+  // maximum number of results to return    
+  load = async () => {
+    await T.ssdMobilenetv1.load(this.modelPath);
+    await T.ageGenderNet.load(this.modelPath);
+    this.optionsSSDMobileNet = new z(
+      {
+        minConfidence: this.minScore,
+        maxResults: this.maxResults
+      }
+    );
+    const engine2 = await engine();
+  };
+  detect = async (input2) => {
+    const dataSSDMobileNet = await mr(input2, this.optionsSSDMobileNet).withAgeAndGender();
+    return dataSSDMobileNet;
+  };
+};
 
 // node_modules/@tensorflow-models/body-segmentation/dist/body-segmentation.esm.js
 var import_selfie_segmentation = __toESM(require_selfie_segmentation());
@@ -76390,7 +76634,7 @@ function j2(t) {
     });
   });
 }
-function V(t) {
+function V2(t) {
   if (t < 0 || t >= 256)
     throw new Error("Mask value must be in range [0, 255] but got " + t);
   if (!Number.isInteger(t))
@@ -76506,7 +76750,7 @@ function st(t, e) {
   var n2 = t[0], r = t[1];
   return [Math.round((r - 1) / e + 1), Math.round((n2 - 1) / e + 1)];
 }
-function ut(t, e, n2, r, i, o, a, s, u, f, l) {
+function ut2(t, e, n2, r, i, o, a, s, u, f, l) {
   for (var d = a[0], h = a[1], p2 = t.shape, m = p2[0], g2 = p2[1], v = e.shape.slice(0, 2), w = v[0], y = v[1], x = reshape(e, [w, y, 2, $2]), M2 = new Float32Array(l * $2 * 3).fill(0), k3 = 0; k3 < n2.length; k3++)
     for (var E2 = k3 * $2 * 3, T2 = n2[k3], P2 = 0; P2 < $2; P2++) {
       var I2 = T2.keypoints[P2], O = E2 + 3 * P2;
@@ -76518,7 +76762,7 @@ function ut(t, e, n2, r, i, o, a, s, u, f, l) {
 function ft() {
   return "webgl" === getBackend();
 }
-function lt(t, e, n2, o, s, u, f, l, c, d, h, p2) {
+function lt2(t, e, n2, o, s, u, f, l, c, d, h, p2) {
   var m = f[0], g2 = f[1];
   return void 0 === c && (c = 0.2), void 0 === d && (d = 8), void 0 === h && (h = 0.3), void 0 === p2 && (p2 = 10), D(this, void 0, void 0, function() {
     var f2, v, w, y, b;
@@ -76528,7 +76772,7 @@ function lt(t, e, n2, o, s, u, f, l, c, d, h, p2) {
           return f2 = n2.filter(function(t2) {
             return t2.score >= c;
           }), ft() ? (w = tidy(function() {
-            var n3 = ut(t, e, f2, o, s, u, [m, g2], l, d, h, p2), c2 = engine().makeTensorFromDataId(n3.dataId, n3.shape, n3.dtype);
+            var n3 = ut2(t, e, f2, o, s, u, [m, g2], l, d, h, p2), c2 = engine().makeTensorFromDataId(n3.dataId, n3.shape, n3.dtype);
             return f2.map(function(t2, e2) {
               return function(t3, e3) {
                 return tidy(function() {
@@ -76581,7 +76825,7 @@ function ct2(t, e, n2, o, s, u, f, l, c, m, g2, v, w) {
           return l3 = o.filter(function(t2) {
             return t2.score >= m;
           }), ft() ? (x = tidy(function() {
-            var o2 = ut(t, e, l3, s, u, f, [y, b], c, g2, v, w), m2 = engine().makeTensorFromDataId(o2.dataId, o2.shape, o2.dtype);
+            var o2 = ut2(t, e, l3, s, u, f, [y, b], c, g2, v, w), m2 = engine().makeTensorFromDataId(o2.dataId, o2.shape, o2.dtype);
             return l3.map(function(t2, e2) {
               return function(t3, e3, n3) {
                 return tidy(function() {
@@ -76629,7 +76873,7 @@ function ct2(t, e, n2, o, s, u, f, l, c, m, g2, v, w) {
 function dt(t) {
   return Math.floor(t / 2);
 }
-var ht = function() {
+var ht2 = function() {
   function t(t2, e) {
     this.priorityQueue = new Array(t2), this.numberOfElements = -1, this.getElementValue = e;
   }
@@ -76729,10 +76973,10 @@ function xt2(t, e, n2) {
   }, 0);
   return r / n2.length;
 }
-function Mt(t, e, n2, r, i, o, a, s) {
+function Mt2(t, e, n2, r, i, o, a, s) {
   void 0 === a && (a = 0.5), void 0 === s && (s = 20);
   for (var u = [], f = function(t2, e2, n3) {
-    for (var r2 = n3.shape, i2 = r2[0], o2 = r2[1], a6 = r2[2], s2 = new ht(i2 * o2 * a6, function(t3) {
+    for (var r2 = n3.shape, i2 = r2[0], o2 = r2[1], a6 = r2[2], s2 = new ht2(i2 * o2 * a6, function(t3) {
       return t3.score;
     }), u2 = 0; u2 < i2; ++u2)
       for (var f2 = 0; f2 < o2; ++f2)
@@ -76790,11 +77034,11 @@ function _t2(t, e) {
   }(t, e) ? t : Math.floor(t / e) * e + 1;
 }
 var Ht2 = { low: "low", medium: "medium", high: "high", full: "full" };
-var At = ((kt2 = {})[Ht2.low] = 0.25, kt2[Ht2.medium] = 0.5, kt2[Ht2.high] = 0.75, kt2[Ht2.full] = 1, kt2);
+var At2 = ((kt2 = {})[Ht2.low] = 0.25, kt2[Ht2.medium] = 0.5, kt2[Ht2.high] = 0.75, kt2[Ht2.full] = 1, kt2);
 function Rt2(t, e, n2) {
   var r = n2[0], i = n2[1], o = function(t2) {
     if ("string" == typeof t2) {
-      var e2 = At[t2];
+      var e2 = At2[t2];
       return util_exports.assert("number" == typeof e2, function() {
         return "string value of inputResolution must be one of " + Object.values(Ht2).join(",") + " but was " + t2 + ".";
       }), e2;
@@ -76805,7 +77049,7 @@ function Rt2(t, e, n2) {
   }(t);
   return [_t2(r * o, e), _t2(i * o, e)];
 }
-function Ft(t, e, n2, i, o) {
+function Ft2(t, e, n2, i, o) {
   var a = e[0], s = e[1], f = n2[0], l = n2[1], c = i[0], d = c[0], h = c[1], p2 = i[1], m = p2[0], w = p2[1];
   return void 0 === o && (o = false), tidy(function() {
     var e2 = image.resizeBilinear(t, [f, l], true);
@@ -76829,7 +77073,7 @@ function Ct(t, i) {
   });
   return { resized: g2, padding: { top: d, left: p2, right: m, bottom: h } };
 }
-function Dt(t) {
+function Dt2(t) {
   return D(this, void 0, void 0, function() {
     return B2(this, function(e) {
       return [2, Promise.all(t.map(function(t2) {
@@ -76910,7 +77154,7 @@ var Qt = function() {
     var i = this;
     void 0 === n2 && (n2 = 0.5);
     var o = Ot2(t2), a = o[0], s = o[1], u = Rt2(e, this.baseModel.outputStride, [a, s]), f = Ct(t2, u), l = f.resized, c = f.padding, d = tidy(function() {
-      var t3 = i.predictForPersonSegmentation(l), e2 = t3.segmentLogits, r = t3.heatmapScores, o2 = t3.offsets, u2 = t3.displacementFwd, f2 = t3.displacementBwd, d2 = l.shape, h2 = d2[0], p3 = d2[1], m2 = Ft(e2, [a, s], [h2, p3], [[c.top, c.bottom], [c.left, c.right]], true);
+      var t3 = i.predictForPersonSegmentation(l), e2 = t3.segmentLogits, r = t3.heatmapScores, o2 = t3.offsets, u2 = t3.displacementFwd, f2 = t3.displacementBwd, d2 = l.shape, h2 = d2[0], p3 = d2[1], m2 = Ft2(e2, [a, s], [h2, p3], [[c.top, c.bottom], [c.left, c.right]], true);
       return { segmentation: N(squeeze(m2), n2), heatmapScores: r, offsets: o2, displacementFwd: u2, displacementBwd: f2 };
     }), h = d.segmentation, p2 = d.heatmapScores, m = d.offsets, v = d.displacementFwd, w = d.displacementBwd;
     return l.dispose(), { segmentation: h, heatmapScores: p2, offsets: m, displacementFwd: v, displacementBwd: w, padding: c, internalResolutionHeightAndWidth: u };
@@ -76922,9 +77166,9 @@ var Qt = function() {
           case 0:
             return qt(e = C2(C2({}, Kt), e)), n2 = this.segmentPersonActivation(t2, e.internalResolution, e.segmentationThreshold), r = n2.segmentation, i = n2.heatmapScores, o = n2.offsets, a = n2.displacementFwd, s = n2.displacementBwd, u = n2.padding, f = n2.internalResolutionHeightAndWidth, l = r.shape, c = l[0], d = l[1], [4, r.data()];
           case 1:
-            return h = b.sent(), r.dispose(), [4, Dt([i, o, a, s])];
+            return h = b.sent(), r.dispose(), [4, Dt2([i, o, a, s])];
           case 2:
-            return p2 = b.sent(), m = p2[0], g2 = p2[1], v = p2[2], w = p2[3], y = Bt2(y = Mt(m, g2, v, w, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [c, d], f, u, false), i.dispose(), o.dispose(), a.dispose(), s.dispose(), [2, { height: c, width: d, data: h, allPoses: y }];
+            return p2 = b.sent(), m = p2[0], g2 = p2[1], v = p2[2], w = p2[3], y = Bt2(y = Mt2(m, g2, v, w, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [c, d], f, u, false), i.dispose(), o.dispose(), a.dispose(), s.dispose(), [2, { height: c, width: d, data: h, allPoses: y }];
         }
       });
     });
@@ -76935,11 +77179,11 @@ var Qt = function() {
         switch (T2.label) {
           case 0:
             return Nt2(e = C2(C2({}, Ut2), e)), n2 = Ot2(t2), i = n2[0], o = n2[1], a = Rt2(e.internalResolution, this.baseModel.outputStride, [i, o]), s = Ct(t2, a), u = s.resized, f = s.padding, l = tidy(function() {
-              var t3, n3 = E2.predictForMultiPersonInstanceSegmentationAndPart(u), r = n3.segmentLogits, s2 = n3.longOffsets, l3 = n3.heatmapScores, c2 = n3.offsets, d2 = n3.displacementFwd, h2 = n3.displacementBwd, p3 = Ft(r, [i, o], a, [[f.top, f.bottom], [f.left, f.right]], true);
+              var t3, n3 = E2.predictForMultiPersonInstanceSegmentationAndPart(u), r = n3.segmentLogits, s2 = n3.longOffsets, l3 = n3.heatmapScores, c2 = n3.offsets, d2 = n3.displacementFwd, h2 = n3.displacementBwd, p3 = Ft2(r, [i, o], a, [[f.top, f.bottom], [f.left, f.right]], true);
               return t3 = s2, { segmentation: N(squeeze(p3), e.segmentationThreshold), longOffsets: t3, heatmapScoresRaw: l3, offsetsRaw: c2, displacementFwdRaw: d2, displacementBwdRaw: h2 };
-            }), c = l.segmentation, d = l.longOffsets, h = l.heatmapScoresRaw, p2 = l.offsetsRaw, m = l.displacementFwdRaw, v = l.displacementBwdRaw, [4, Dt([h, p2, m, v])];
+            }), c = l.segmentation, d = l.longOffsets, h = l.heatmapScoresRaw, p2 = l.offsetsRaw, m = l.displacementFwdRaw, v = l.displacementBwdRaw, [4, Dt2([h, p2, m, v])];
           case 1:
-            return w = T2.sent(), y = w[0], b = w[1], S2 = w[2], x = w[3], M2 = Bt2(M2 = Mt(y, b, S2, x, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [i, o], a, f, false), [4, lt(c, d, M2, i, o, this.baseModel.outputStride, a, f, e.scoreThreshold, e.refineSteps, e.minKeypointScore, e.maxDetections)];
+            return w = T2.sent(), y = w[0], b = w[1], S2 = w[2], x = w[3], M2 = Bt2(M2 = Mt2(y, b, S2, x, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [i, o], a, f, false), [4, lt2(c, d, M2, i, o, this.baseModel.outputStride, a, f, e.scoreThreshold, e.refineSteps, e.minKeypointScore, e.maxDetections)];
           case 2:
             return k3 = T2.sent(), u.dispose(), c.dispose(), d.dispose(), h.dispose(), p2.dispose(), m.dispose(), v.dispose(), [2, k3];
         }
@@ -76949,7 +77193,7 @@ var Qt = function() {
     var i = this;
     void 0 === n2 && (n2 = 0.5);
     var o = Ot2(t2), a = o[0], s = o[1], u = Rt2(e, this.baseModel.outputStride, [a, s]), f = Ct(t2, u), l = f.resized, c = f.padding, d = tidy(function() {
-      var t3 = i.predictForPersonSegmentationAndPart(l), e2 = t3.segmentLogits, r = t3.partHeatmapLogits, o2 = t3.heatmapScores, u2 = t3.offsets, f2 = t3.displacementFwd, d2 = t3.displacementBwd, h2 = l.shape, p3 = h2[0], m2 = h2[1], v2 = Ft(e2, [a, s], [p3, m2], [[c.top, c.bottom], [c.left, c.right]], true), w2 = Ft(r, [a, s], [p3, m2], [[c.top, c.bottom], [c.left, c.right]], true);
+      var t3 = i.predictForPersonSegmentationAndPart(l), e2 = t3.segmentLogits, r = t3.partHeatmapLogits, o2 = t3.heatmapScores, u2 = t3.offsets, f2 = t3.displacementFwd, d2 = t3.displacementBwd, h2 = l.shape, p3 = h2[0], m2 = h2[1], v2 = Ft2(e2, [a, s], [p3, m2], [[c.top, c.bottom], [c.left, c.right]], true), w2 = Ft2(r, [a, s], [p3, m2], [[c.top, c.bottom], [c.left, c.right]], true);
       return { partSegmentation: Q(N(squeeze(v2), n2), w2), heatmapScores: o2, offsets: u2, displacementFwd: f2, displacementBwd: d2 };
     }), h = d.partSegmentation, p2 = d.heatmapScores, m = d.offsets, v = d.displacementFwd, w = d.displacementBwd;
     return l.dispose(), { partSegmentation: h, heatmapScores: p2, offsets: m, displacementFwd: v, displacementBwd: w, padding: c, internalResolutionHeightAndWidth: u };
@@ -76961,9 +77205,9 @@ var Qt = function() {
           case 0:
             return qt(e = C2(C2({}, Kt), e)), n2 = this.segmentPersonPartsActivation(t2, e.internalResolution, e.segmentationThreshold), r = n2.partSegmentation, i = n2.heatmapScores, o = n2.offsets, a = n2.displacementFwd, s = n2.displacementBwd, u = n2.padding, f = n2.internalResolutionHeightAndWidth, l = r.shape, c = l[0], d = l[1], [4, r.data()];
           case 1:
-            return h = b.sent(), r.dispose(), [4, Dt([i, o, a, s])];
+            return h = b.sent(), r.dispose(), [4, Dt2([i, o, a, s])];
           case 2:
-            return p2 = b.sent(), m = p2[0], g2 = p2[1], v = p2[2], w = p2[3], y = Bt2(y = Mt(m, g2, v, w, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [c, d], f, u, false), i.dispose(), o.dispose(), a.dispose(), s.dispose(), [2, { height: c, width: d, data: h, allPoses: y }];
+            return p2 = b.sent(), m = p2[0], g2 = p2[1], v = p2[2], w = p2[3], y = Bt2(y = Mt2(m, g2, v, w, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [c, d], f, u, false), i.dispose(), o.dispose(), a.dispose(), s.dispose(), [2, { height: c, width: d, data: h, allPoses: y }];
         }
       });
     });
@@ -76974,7 +77218,7 @@ var Qt = function() {
         switch (A3.label) {
           case 0:
             return Nt2(e = C2(C2({}, Ut2), e)), n2 = Ot2(t2), o = n2[0], a = n2[1], s = Rt2(e.internalResolution, this.baseModel.outputStride, [o, a]), d = Ct(t2, s), h = d.resized, p2 = d.padding, m = tidy(function() {
-              var t3 = H2.predictForMultiPersonInstanceSegmentationAndPart(h), n3 = t3.segmentLogits, d2 = t3.longOffsets, m2 = t3.heatmapScores, v2 = t3.offsets, w2 = t3.displacementFwd, y2 = t3.displacementBwd, b2 = t3.partHeatmaps, S3 = Ft(n3, [o, a], s, [[p2.top, p2.bottom], [p2.left, p2.right]], true), x2 = Ft(b2, [o, a], s, [[p2.top, p2.bottom], [p2.left, p2.right]], true), M3 = d2, k4 = N(squeeze(S3), e.segmentationThreshold), E3 = function(t4) {
+              var t3 = H2.predictForMultiPersonInstanceSegmentationAndPart(h), n3 = t3.segmentLogits, d2 = t3.longOffsets, m2 = t3.heatmapScores, v2 = t3.offsets, w2 = t3.displacementFwd, y2 = t3.displacementBwd, b2 = t3.partHeatmaps, S3 = Ft2(n3, [o, a], s, [[p2.top, p2.bottom], [p2.left, p2.right]], true), x2 = Ft2(b2, [o, a], s, [[p2.top, p2.bottom], [p2.left, p2.right]], true), M3 = d2, k4 = N(squeeze(S3), e.segmentationThreshold), E3 = function(t4) {
                 var e2 = t4.shape, n4 = e2[0], o2 = e2[1], a6 = e2[2];
                 return tidy(function() {
                   var e3 = q(t4), r = expandDims(range(0, a6, 1, "int32"), 1), s2 = cast(matMul(e3, r), "int32");
@@ -76982,9 +77226,9 @@ var Qt = function() {
                 });
               }(x2);
               return { segmentation: k4, longOffsets: M3, heatmapScoresRaw: m2, offsetsRaw: v2, displacementFwdRaw: w2, displacementBwdRaw: y2, partSegmentation: E3 };
-            }), v = m.segmentation, w = m.longOffsets, y = m.heatmapScoresRaw, b = m.offsetsRaw, S2 = m.displacementFwdRaw, x = m.displacementBwdRaw, M2 = m.partSegmentation, [4, Dt([y, b, S2, x])];
+            }), v = m.segmentation, w = m.longOffsets, y = m.heatmapScoresRaw, b = m.offsetsRaw, S2 = m.displacementFwdRaw, x = m.displacementBwdRaw, M2 = m.partSegmentation, [4, Dt2([y, b, S2, x])];
           case 1:
-            return k3 = A3.sent(), E2 = k3[0], T2 = k3[1], P2 = k3[2], I2 = k3[3], O = Bt2(O = Mt(E2, T2, P2, I2, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [o, a], s, p2, false), [4, ct2(v, w, M2, O, o, a, this.baseModel.outputStride, s, p2, e.scoreThreshold, e.refineSteps, e.minKeypointScore, e.maxDetections)];
+            return k3 = A3.sent(), E2 = k3[0], T2 = k3[1], P2 = k3[2], I2 = k3[3], O = Bt2(O = Mt2(E2, T2, P2, I2, this.baseModel.outputStride, e.maxDetections, e.scoreThreshold, e.nmsRadius), [o, a], s, p2, false), [4, ct2(v, w, M2, O, o, a, this.baseModel.outputStride, s, p2, e.scoreThreshold, e.refineSteps, e.minKeypointScore, e.maxDetections)];
           case 2:
             return _2 = A3.sent(), h.dispose(), v.dispose(), w.dispose(), y.dispose(), b.dispose(), S2.dispose(), x.dispose(), M2.dispose(), [2, _2];
         }
@@ -77075,12 +77319,12 @@ var Jt2 = function() {
   }, t;
 }();
 function Zt2(t) {
-  if (V(t), 255 !== t)
+  if (V2(t), 255 !== t)
     throw new Error("Foreground id must be 255 but got " + t);
   return "person";
 }
 function te2(t) {
-  if (V(t), t >= $t2.length)
+  if (V2(t), t >= $t2.length)
     throw new Error("Invalid body part value " + t);
   return $t2[t];
 }
@@ -77142,8 +77386,8 @@ function ne2(t) {
     });
   });
 }
-var re = { runtime: "mediapipe", modelType: "general" };
-var ie = function() {
+var re2 = { runtime: "mediapipe", modelType: "general" };
+var ie2 = function() {
   function t(t2) {
     this.mask = t2;
   }
@@ -77169,8 +77413,8 @@ var ie = function() {
     return "canvasimagesource";
   }, t;
 }();
-function oe(t) {
-  return V(t), "person";
+function oe2(t) {
+  return V2(t), "person";
 }
 var ae2 = function() {
   function t(t2) {
@@ -77182,7 +77426,7 @@ var ae2 = function() {
     else
       e = 0;
     this.selfieSegmentationSolution.setOptions({ modelSelection: e, selfieMode: this.selfieMode }), this.selfieSegmentationSolution.onResults(function(t3) {
-      n2.segmentation = [{ maskValueToLabel: oe, mask: new ie(t3.segmentationMask) }];
+      n2.segmentation = [{ maskValueToLabel: oe2, mask: new ie2(t3.segmentationMask) }];
     });
   }
   return t.prototype.segmentPeople = function(t2, r) {
@@ -77219,9 +77463,9 @@ function se2(t) {
         case 0:
           return e = function(t2) {
             if (null == t2)
-              return C2({}, re);
+              return C2({}, re2);
             var e2 = C2({}, t2);
-            return e2.runtime = "mediapipe", null == e2.modelType && (e2.modelType = re.modelType), e2;
+            return e2.runtime = "mediapipe", null == e2.modelType && (e2.modelType = re2.modelType), e2;
           }(t), [4, (n2 = new ae2(e)).initialize()];
         case 1:
           return r.sent(), [2, n2];
@@ -77300,7 +77544,7 @@ function he2(t, e, n2) {
   });
 }
 var pe2 = { runtime: "tfjs", modelType: "general", modelUrl: "https://tfhub.dev/mediapipe/tfjs-model/selfie_segmentation/general/1" };
-var me = { flipHorizontal: false };
+var me2 = { flipHorizontal: false };
 var ge2 = { outputTensorSize: { width: 256, height: 256 }, keepAspectRatio: false, borderMode: "zero", outputTensorFloatRange: [0, 1] };
 var ve2 = { outputTensorSize: { width: 256, height: 144 }, keepAspectRatio: false, borderMode: "zero", outputTensorFloatRange: [0, 1] };
 var we2 = { activation: "none" };
@@ -77331,7 +77575,7 @@ var ye2 = function() {
   }, t;
 }();
 function be2(t) {
-  return V(t), "person";
+  return V2(t), "person";
 }
 var Se2;
 var xe2 = function() {
@@ -77344,9 +77588,9 @@ var xe2 = function() {
       return B2(this, function(o) {
         return e = function(t3) {
           if (null == t3)
-            return C2({}, me);
+            return C2({}, me2);
           var e2 = C2({}, t3);
-          return null == e2.flipHorizontal && (e2.flipHorizontal = me.flipHorizontal), e2;
+          return null == e2.flipHorizontal && (e2.flipHorizontal = me2.flipHorizontal), e2;
         }(e), null == t2 ? (this.reset(), [2, []]) : (n2 = tidy(function() {
           var e2 = de2(t2, "general" === i.modelType ? ge2 : ve2).imageTensor, n3 = slice(i.model.predict(e2), [0, 0, 0, 1], -1), r = fe2(t2), o2 = he2(n3, we2, r), a = expandDims(o2, 2), s = pad(a, [[0, 0], [0, 0], [0, 1]]);
           return mirrorPad(s, [[0, 0], [0, 0], [0, 2]], "symmetric");
@@ -77379,7 +77623,7 @@ function Me2(t) {
     });
   });
 }
-function ke(t, e) {
+function ke2(t, e) {
   return D(this, void 0, void 0, function() {
     var n2, r;
     return B2(this, function(i) {
@@ -77404,50 +77648,11 @@ function ke(t, e) {
 !function(t) {
   t.BodyPix = "BodyPix", t.MediaPipeSelfieSegmentation = "MediaPipeSelfieSegmentation";
 }(Se2 || (Se2 = {}));
-function Ve2(t, e, n2, r, i, o) {
-  void 0 === o && (o = { r: 0, g: 255, b: 255, a: 255 });
-  for (var a = -i; a <= i; a++)
-    for (var s = -i; s <= i; s++)
-      if (0 !== a && 0 !== s) {
-        var u = (e + a) * r + (n2 + s);
-        t[4 * u + 0] = o.r, t[4 * u + 1] = o.g, t[4 * u + 2] = o.b, t[4 * u + 3] = o.a;
-      }
-}
-function Ke2(t, e, n2, r, i, o, a) {
-  void 0 === a && (a = 1);
-  for (var s = 0, u = -a; u <= a; u++)
-    for (var f = -a; f <= a; f++)
-      if (0 !== u && 0 !== f) {
-        var l = (e + u) * r + (n2 + f);
-        (!i[t[4 * l]] || t[4 * l + 3] < o) && (s += 1);
-      }
-  return s > 0;
-}
-function Ue2(t, e, n2, r, i, o) {
-  return void 0 === e && (e = { r: 0, g: 0, b: 0, a: 0 }), void 0 === n2 && (n2 = { r: 0, g: 0, b: 0, a: 255 }), void 0 === r && (r = false), void 0 === i && (i = 0.5), void 0 === o && (o = Array.from(Array(256).keys())), D(this, void 0, void 0, function() {
-    var a, s, u, f, l, c, d, h, p2, m, g2, v, w, y;
-    return B2(this, function(b) {
-      switch (b.label) {
-        case 0:
-          return 0 === (a = Array.isArray(t) ? t : [t]).length ? [2, null] : [4, Promise.all(a.map(function(t2) {
-            return t2.mask.toImageData();
-          }))];
-        case 1:
-          for (s = b.sent(), u = s[0], f = u.width, l = u.height, c = new Uint8ClampedArray(f * l * 4), d = Math.round(255 * i), h = new Array(256).fill(false), o.forEach(function(t2) {
-            return h[t2] = true;
-          }), p2 = 0; p2 < l; p2++)
-            for (m = 0; m < f; m++)
-              for (c[4 * (g2 = p2 * f + m) + 0] = n2.r, c[4 * g2 + 1] = n2.g, c[4 * g2 + 2] = n2.b, c[4 * g2 + 3] = n2.a, v = 0, w = s; v < w.length; v++)
-                y = w[v], h[y.data[4 * g2]] && y.data[4 * g2 + 3] >= d && (c[4 * g2] = e.r, c[4 * g2 + 1] = e.g, c[4 * g2 + 2] = e.b, c[4 * g2 + 3] = e.a, r && p2 - 1 >= 0 && p2 + 1 < l && m - 1 >= 0 && m + 1 < f && Ke2(y.data, p2, m, f, h, d) && Ve2(c, p2, m, f, 1));
-          return [2, new ImageData(c, f, l)];
-      }
-    });
-  });
-}
 
 // src/background/tf-models/bodypix/Segmenter.js
 var Segmenter = class {
   bodySegmenterConfig = {
+    // runtime: 'tfjs', // or 'tfjs'
     architecture: "ResNet50",
     // architecture: 'MobileNetV1',
     outputStride: 32,
@@ -77462,17 +77667,20 @@ var Segmenter = class {
   };
   load = async () => {
     const bodyPixModel = Se2.BodyPix;
-    this.bodySegmenter = await ke(
+    this.bodySegmenter = await ke2(
       bodyPixModel,
       this.bodySegmenterConfig
     );
   };
   segment = async (canvas) => {
-    const segmentation = await this.bodySegmenter.segmentPeople(
-      canvas,
-      this.bodySegmentationConfig
-    );
-    const coloredPartImage = await Ue2(segmentation);
+    let segmentation = null;
+    try {
+      segmentation = await this.bodySegmenter.segmentPeople(
+        canvas,
+        this.bodySegmentationConfig
+      );
+    } catch (error) {
+    }
     return segmentation;
   };
 };
@@ -77482,7 +77690,13 @@ var DrawMask = class {
   constructor() {
   }
   draw = async (ctx, imageData, segmentationData, genderData) => {
-    genderData = [];
+    if (segmentationData === null)
+      return;
+    if (genderData === null)
+      genderData = [];
+    if (segmentationData.length <= 0) {
+      return false;
+    }
     let data = imageData.data;
     let skipMasking = false;
     for await (const single of segmentationData) {
@@ -77509,6 +77723,8 @@ var DrawMask = class {
           continue;
         }
       }
+      if (skipMasking === true)
+        continue;
       for (let i = 0; i < data.length; i += 4) {
         if (segmentPeople.data[i] !== 24) {
           data[i] = 111;
@@ -77521,6 +77737,7 @@ var DrawMask = class {
       }
     }
     ctx.putImageData(imageData, 0, 0);
+    return true;
   };
   getImageDataIndexFromBox = (box, imageSize) => {
     box = box.detection._box;
@@ -77547,6 +77764,9 @@ var analyzer = class {
     await ready();
     await enableProdMode();
     await ready();
+    this.genderFaceDetection = new GenderFaceDetection();
+    await this.genderFaceDetection.load();
+    console.log("faceapi loaded");
     this.segmenter = new Segmenter();
     await this.segmenter.load();
     console.log("faceapi loaded");
@@ -77587,12 +77807,18 @@ var analyzer = class {
         invalidMedia: true
       };
     }
-    const [people] = await Promise.all([
-      // genderFaceDetection.detect(this.frameCanvas),
+    const [genderData, people] = await Promise.all([
+      this.genderFaceDetection.detect(this.frameCanvas),
       this.segmenter.segment(imageData)
     ]);
     const drawMask = new DrawMask();
-    await drawMask.draw(this.frameCtx, imageData, people, null);
+    const shouldMask = await drawMask.draw(this.frameCtx, imageData, people, genderData);
+    if (shouldMask === false) {
+      return {
+        shouldMask: false,
+        maskedUrl: null
+      };
+    }
     this.frameCtx.fillStyle = "#FF0000";
     this.frameCtx.fillRect(10, 10, 30, 20);
     this.frameCtx.fillStyle = "#00FF00";
@@ -77602,7 +77828,7 @@ var analyzer = class {
     let blob = await this.canvasToBlob(this.frameCanvas);
     let base64 = await this.blobToBase64(blob);
     return {
-      shouldMask: true,
+      shouldMask,
       maskedUrl: base64
     };
   };
