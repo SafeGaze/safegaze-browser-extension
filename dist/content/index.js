@@ -3,11 +3,12 @@ var hvf = {
   domObjectIndex: 0,
   // Initialize the extension
   init: function() {
-    this.triggerScanning();
-    this.receiveMedia();
     window.addEventListener(
       "load",
       () => {
+        document.body.classList.add("hvf-extension-loaded");
+        this.triggerScanning();
+        this.receiveMedia();
         setTimeout(() => {
           this.listenUrlUpdate();
         }, 1e3);
@@ -24,7 +25,11 @@ var hvf = {
     var waiting = false;
     return function() {
       if (!waiting) {
-        callback.apply(this, arguments);
+        try {
+          callback.apply(this, arguments);
+        } catch (error) {
+          console.log(error);
+        }
         waiting = true;
         setTimeout(function() {
           waiting = false;

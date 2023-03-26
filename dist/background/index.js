@@ -77649,15 +77649,12 @@ function ke2(t, e) {
   t.BodyPix = "BodyPix", t.MediaPipeSelfieSegmentation = "MediaPipeSelfieSegmentation";
 }(Se2 || (Se2 = {}));
 
-// src/background/tf-models/bodypix/Segmenter.js
+// src/background/tf-models/segmenter/bodySegmenter.js
 var Segmenter = class {
   bodySegmenterConfig = {
-    // runtime: 'tfjs', // or 'tfjs'
     architecture: "ResNet50",
-    // architecture: 'MobileNetV1',
     outputStride: 32,
     quantBytes: 2
-    // multiplier: 1,
   };
   bodySegmentationConfig = {
     multiSegmentation: true,
@@ -77685,11 +77682,36 @@ var Segmenter = class {
   };
 };
 
+// src/background/tf-models/segmenter/selfieSegmenter.js
+var selfieSegmenter = class {
+  selfieSegmenterConfig = {
+    runtime: "tfjs",
+    // or 'tfjs'
+    solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation",
+    // or 'base/node_modules/@mediapipe/selfie_segmentation' in npm.
+    modelType: "general"
+  };
+  load = async () => {
+    const selfieModel = Se2.MediaPipeSelfieSegmentation;
+    this.selfieSegmenter = await ke2(selfieModel, this.selfieSegmenterConfig);
+  };
+  segment = async (canvas) => {
+    let segmentation = null;
+    try {
+      segmentation = await this.selfieSegmenter.segmentPeople(
+        canvas
+      );
+    } catch (error) {
+    }
+    return segmentation;
+  };
+};
+
 // src/background/tf-models/mask/DrawMask.js
 var DrawMask = class {
   constructor() {
   }
-  draw = async (ctx, imageData, segmentationData, genderData) => {
+  draw = async (ctx, imageData, genderData, segmentationData, selfieData) => {
     if (segmentationData === null)
       return;
     if (genderData === null)
@@ -77767,9 +77789,12 @@ var analyzer = class {
     this.genderFaceDetection = new GenderFaceDetection();
     await this.genderFaceDetection.load();
     console.log("faceapi loaded");
-    this.segmenter = new Segmenter();
-    await this.segmenter.load();
-    console.log("faceapi loaded");
+    this.bodySegmenter = new Segmenter();
+    await this.bodySegmenter.load();
+    console.log("bodypix loaded");
+    this.selfieSegmenter = new selfieSegmenter();
+    await this.selfieSegmenter.load();
+    console.log("selfie loaded");
   };
   // draws the image to the canvas and returns the image data
   drawImage = async (imageUrl) => {
@@ -77807,12 +77832,13 @@ var analyzer = class {
         invalidMedia: true
       };
     }
-    const [genderData, people] = await Promise.all([
+    const [genderData, people, selfie] = await Promise.all([
       this.genderFaceDetection.detect(this.frameCanvas),
-      this.segmenter.segment(imageData)
+      this.bodySegmenter.segment(imageData),
+      this.selfieSegmenter.segment(imageData)
     ]);
     const drawMask = new DrawMask();
-    const shouldMask = await drawMask.draw(this.frameCtx, imageData, people, genderData);
+    const shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
     if (shouldMask === false) {
       return {
         shouldMask: false,

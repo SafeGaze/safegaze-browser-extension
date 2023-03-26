@@ -1,6 +1,7 @@
 import * as tf from `@tensorflow/tfjs`;
 import GenderFaceDetection from '../tf-models/face-api/GenderFaceDetection.js';
-import Segmenter from '../tf-models/bodypix/Segmenter.js';
+import bodySegmenter from '../tf-models/segmenter/bodySegmenter.js';
+import selfieSegmenter from '../tf-models/segmenter/selfieSegmenter.js';
 import DrawMask from '../tf-models/mask/DrawMask.js';
 class analyzer {
     constructor() {
@@ -27,9 +28,14 @@ class analyzer {
         console.log('faceapi loaded');
 
         // bodypix
-        this.segmenter = new Segmenter();
-        await this.segmenter.load();
-        console.log('faceapi loaded');
+        this.bodySegmenter = new bodySegmenter();
+        await this.bodySegmenter.load();
+        console.log('bodypix loaded');
+
+        // selfie           
+        this.selfieSegmenter = new selfieSegmenter();
+        await this.selfieSegmenter.load();
+        console.log('selfie loaded');
     };
 
     // draws the image to the canvas and returns the image data
@@ -77,13 +83,14 @@ class analyzer {
             };
         }
 
-        const [genderData, people] = await Promise.all([
+        const [genderData, people, selfie] = await Promise.all([
             this.genderFaceDetection.detect(this.frameCanvas),
-            this.segmenter.segment(imageData)
+            this.bodySegmenter.segment(imageData),
+            this.selfieSegmenter.segment(imageData)
         ]);
 
         const drawMask = new DrawMask();
-        const shouldMask = await drawMask.draw(this.frameCtx, imageData, people, genderData);
+        const shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
 
         if (shouldMask === false) {
             return {

@@ -5,9 +5,12 @@ export default class DrawMask {
 
     }
 
-    draw = async (ctx, imageData, segmentationData, genderData) => {
+    draw = async (ctx, imageData, genderData, segmentationData, selfieData) => {
         if (segmentationData === null) return;
         if (genderData === null) genderData = [];
+
+        // console.log(selfieData);
+        // segmentationData.push(selfieData);
 
         if(segmentationData.length <= 0){
             return false;

@@ -7,7 +7,7 @@
   "resolved" "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.17.4.tgz"
   "version" "0.17.4"
 
-"@mediapipe/selfie_segmentation@~0.1.0":
+"@mediapipe/selfie_segmentation@^0.1.1675465747", "@mediapipe/selfie_segmentation@~0.1.0":
   "integrity" "sha512-IxYxNhwE5VwOm52L1yoFWYLP7q9Pd+NJjzOC5tlepfvEGaY3o9hslhUrx9BgseqdfZtKSDtd/4NfCSMjNzQalA=="
   "resolved" "https://registry.npmjs.org/@mediapipe/selfie_segmentation/-/selfie_segmentation-0.1.1675465747.tgz"
   "version" "0.1.1675465747"
@@ -47,12 +47,12 @@
     "@types/webgl2" "0.0.6"
     "seedrandom" "^3.0.5"
 
-"@tensorflow/tfjs-converter@^3.13.0", "@tensorflow/tfjs-converter@3.21.0":
+"@tensorflow/tfjs-converter@^3.1.0", "@tensorflow/tfjs-converter@^3.13.0", "@tensorflow/tfjs-converter@3.21.0":
   "integrity" "sha512-12Y4zVDq3yW+wSjSDpSv4HnpL2sDZrNiGSg8XNiDE4HQBdjdA+a+Q3sZF/8NV9y2yoBhL5L7V4mMLDdbZBd9/Q=="
   "resolved" "https://registry.npmjs.org/@tensorflow/tfjs-converter/-/tfjs-converter-3.21.0.tgz"
   "version" "3.21.0"
 
-"@tensorflow/tfjs-core@^3.13.0", "@tensorflow/tfjs-core@3.21.0":
+"@tensorflow/tfjs-core@^3.1.0", "@tensorflow/tfjs-core@^3.13.0", "@tensorflow/tfjs-core@3.21.0":
   "integrity" "sha512-YSfsswOqWfd+M4bXIhT3hwtAb+IV8+ODwIxwdFR/7jTAPZP1wMVnSlpKnXHAN64HFOiP+Tm3HmKusEZ0+09A0w=="
   "resolved" "https://registry.npmjs.org/@tensorflow/tfjs-core/-/tfjs-core-3.21.0.tgz"
   "version" "3.21.0"

@@ -3,13 +3,15 @@ const hvf = {
 
   // Initialize the extension
   init: function () {
-    this.triggerScanning();
-    this.receiveMedia();
 
     // wait for the page to load
     window.addEventListener(
       "load",
       () => {
+        document.body.classList.add("hvf-extension-loaded");
+        this.triggerScanning();
+        this.receiveMedia();
+
         setTimeout(() => {
           this.listenUrlUpdate();
         }, 1000);
@@ -38,7 +40,11 @@ const hvf = {
       // We return a throttled function
       if (!waiting) {
         // If we're not waiting
-        callback.apply(this, arguments); // Execute users function
+        try {
+          callback.apply(this, arguments); // Execute users function
+        } catch (error) {
+          console.log(error);
+        }
         waiting = true; // Prevent future invocations
         setTimeout(function () {
           // After a period of time
