@@ -238,6 +238,9 @@ const hvf = {
     //   attributes: true,
     // });
 
+    // forget about the mutation observer
+    // it's not working as expected
+    // lets use the timer instead
     setInterval(() => {
       hvf.triggerScanning();
     }, 2000);
