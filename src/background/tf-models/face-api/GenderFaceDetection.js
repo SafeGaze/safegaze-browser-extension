@@ -5,20 +5,12 @@ import * as faceapi from './face-api.esm-nobundle.js';
 
 export default class GenderFaceDetection {
 
-    modelPath = 'http://tf-person-masking-prototype.test/dist/face-api-models';
+    modelPath = 'https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models';
     minScore = 0.3; // minimum score
     maxResults = 20; // maximum number of results to return    
 
 
     load = async () => {
-        // faceapi.env.setEnv(faceapi.env.createNodejsEnv());
-
-        // faceapi.env.monkeyPatch({
-        //     Canvas: OffscreenCanvas,
-        //     createCanvasElement: () => {
-        //         return new OffscreenCanvas(480, 270);
-        //     },
-        // });
 
         await faceapi.nets.ssdMobilenetv1.load(this.modelPath);
         await faceapi.nets.ageGenderNet.load(this.modelPath);
@@ -33,9 +25,17 @@ export default class GenderFaceDetection {
     }
 
     detect = async (input) => {
-        const dataSSDMobileNet = await faceapi
+        let dataSSDMobileNet = null;
+        try {
+            dataSSDMobileNet = await faceapi
             .detectAllFaces(input, this.optionsSSDMobileNet)
             .withAgeAndGender();
+
+            return dataSSDMobileNet;
+        } catch (error) {
+            console.log("Error detecting faces");
+            console.log(error);
+        }
 
         return dataSSDMobileNet;
     }

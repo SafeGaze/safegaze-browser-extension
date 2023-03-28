@@ -3,11 +3,11 @@ var hvf = {
   domObjectIndex: 0,
   // Initialize the extension
   init: function() {
-    this.triggerScanning();
-    this.receiveMedia();
     window.addEventListener(
       "load",
       () => {
+        document.body.classList.add("hvf-extension-loaded");
+        this.receiveMedia();
         setTimeout(() => {
           this.listenUrlUpdate();
         }, 1e3);
@@ -20,14 +20,20 @@ var hvf = {
     let result = rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
     return result;
   },
+  throttleWaiting: false,
+  // Initially, we're not waiting
   throttle: function(callback, limit) {
-    var waiting = false;
     return function() {
-      if (!waiting) {
-        callback.apply(this, arguments);
-        waiting = true;
+      if (!this.throttleWaiting) {
+        try {
+          callback.apply(this, arguments);
+        } catch (error) {
+          console.log("Error executing callback in throttle");
+          console.log(error);
+        }
+        this.throttleWaiting = true;
         setTimeout(function() {
-          waiting = false;
+          this.throttleWaiting = false;
         }, limit);
       }
     };
@@ -134,8 +140,11 @@ var hvf = {
           mutation.target.classList.remove("hvf-invalid");
         }
       }
-      this.triggerScanning();
+      hvf.triggerScanning();
     });
+    setInterval(() => {
+      hvf.triggerScanning();
+    }, 2e3);
     document.addEventListener(
       "scroll",
       () => {

@@ -6,10 +6,13 @@
     "build": "yarn build-background && yarn build-content"
   },
   "dependencies": {
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@tensorflow-models/body-segmentation": "^1.0.1",
     "@tensorflow/tfjs": "^3.1.0",
     "@tensorflow/tfjs-backend-wasm": "^3.1.0",
     "@tensorflow/tfjs-backend-webgl": "^3.1.0",
+    "@tensorflow/tfjs-converter": "^3.1.0",
+    "@tensorflow/tfjs-core": "^3.1.0",
     "esbuild": "^0.17.4"
   }
 }

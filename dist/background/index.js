@@ -70452,7 +70452,6 @@ function createElement(element) {
       };
       return canvas;
     default:
-      console.log("arg", element);
       break;
   }
 }
@@ -76447,7 +76446,7 @@ function mr(o, t = new z()) {
 
 // src/background/tf-models/face-api/GenderFaceDetection.js
 var GenderFaceDetection = class {
-  modelPath = "http://tf-person-masking-prototype.test/dist/face-api-models";
+  modelPath = "https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models";
   minScore = 0.3;
   // minimum score
   maxResults = 20;
@@ -76464,7 +76463,14 @@ var GenderFaceDetection = class {
     const engine2 = await engine();
   };
   detect = async (input2) => {
-    const dataSSDMobileNet = await mr(input2, this.optionsSSDMobileNet).withAgeAndGender();
+    let dataSSDMobileNet = null;
+    try {
+      dataSSDMobileNet = await mr(input2, this.optionsSSDMobileNet).withAgeAndGender();
+      return dataSSDMobileNet;
+    } catch (error) {
+      console.log("Error detecting faces");
+      console.log(error);
+    }
     return dataSSDMobileNet;
   };
 };
@@ -77649,15 +77655,12 @@ function ke2(t, e) {
   t.BodyPix = "BodyPix", t.MediaPipeSelfieSegmentation = "MediaPipeSelfieSegmentation";
 }(Se2 || (Se2 = {}));
 
-// src/background/tf-models/bodypix/Segmenter.js
+// src/background/tf-models/segmenter/bodySegmenter.js
 var Segmenter = class {
   bodySegmenterConfig = {
-    // runtime: 'tfjs', // or 'tfjs'
     architecture: "ResNet50",
-    // architecture: 'MobileNetV1',
     outputStride: 32,
     quantBytes: 2
-    // multiplier: 1,
   };
   bodySegmentationConfig = {
     multiSegmentation: true,
@@ -77680,6 +77683,35 @@ var Segmenter = class {
         this.bodySegmentationConfig
       );
     } catch (error) {
+      console.log("Error body segmenting");
+      console.log(error);
+    }
+    return segmentation;
+  };
+};
+
+// src/background/tf-models/segmenter/selfieSegmenter.js
+var selfieSegmenter = class {
+  selfieSegmenterConfig = {
+    runtime: "tfjs",
+    // or 'tfjs'
+    solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation",
+    // or 'base/node_modules/@mediapipe/selfie_segmentation' in npm.
+    modelType: "general"
+  };
+  load = async () => {
+    const selfieModel = Se2.MediaPipeSelfieSegmentation;
+    this.selfieSegmenter = await ke2(selfieModel, this.selfieSegmenterConfig);
+  };
+  segment = async (canvas) => {
+    let segmentation = null;
+    try {
+      segmentation = await this.selfieSegmenter.segmentPeople(
+        canvas
+      );
+    } catch (error) {
+      console.log("Error selfie segmenting");
+      console.log(error);
     }
     return segmentation;
   };
@@ -77689,7 +77721,7 @@ var Segmenter = class {
 var DrawMask = class {
   constructor() {
   }
-  draw = async (ctx, imageData, segmentationData, genderData) => {
+  draw = async (ctx, imageData, genderData, segmentationData, selfieData) => {
     if (segmentationData === null)
       return;
     if (genderData === null)
@@ -77755,21 +77787,29 @@ var DrawMask = class {
 var analyzer = class {
   constructor() {
     this.frameCanvas = new OffscreenCanvas(400, 400);
-    this.frameCtx = this.frameCanvas.getContext("2d");
+    this.frameCtx = this.frameCanvas.getContext("2d", { willReadFrequently: true });
     this.data = {};
     this.n = 0;
+    this.modelLoaded = false;
   }
   init = async () => {
     await setBackend("webgl");
     await ready();
     await enableProdMode();
     await ready();
-    this.genderFaceDetection = new GenderFaceDetection();
-    await this.genderFaceDetection.load();
-    console.log("faceapi loaded");
-    this.segmenter = new Segmenter();
-    await this.segmenter.load();
-    console.log("faceapi loaded");
+    try {
+      this.genderFaceDetection = new GenderFaceDetection();
+      await this.genderFaceDetection.load();
+      this.bodySegmenter = new Segmenter();
+      await this.bodySegmenter.load();
+      this.selfieSegmenter = new selfieSegmenter();
+      await this.selfieSegmenter.load();
+      this.modelLoaded = true;
+    } catch (error) {
+      console.log("Error loading models");
+      console.log(error);
+    }
+    return this.modelLoaded;
   };
   // draws the image to the canvas and returns the image data
   drawImage = async (imageUrl) => {
@@ -77796,6 +77836,13 @@ var analyzer = class {
     return blob;
   };
   analyze = async (data) => {
+    if (this.modelLoaded === false) {
+      return {
+        shouldMask: false,
+        maskedUrl: null,
+        invalidMedia: true
+      };
+    }
     this.data = data;
     let imageData = null;
     try {
@@ -77807,12 +77854,19 @@ var analyzer = class {
         invalidMedia: true
       };
     }
-    const [genderData, people] = await Promise.all([
+    const [genderData, people, selfie] = await Promise.all([
       this.genderFaceDetection.detect(this.frameCanvas),
-      this.segmenter.segment(imageData)
+      this.bodySegmenter.segment(imageData),
+      this.selfieSegmenter.segment(imageData)
     ]);
     const drawMask = new DrawMask();
-    const shouldMask = await drawMask.draw(this.frameCtx, imageData, people, genderData);
+    let shouldMask = false;
+    try {
+      shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+    } catch (error) {
+      console.log("Error drawing mask");
+      console.log(error);
+    }
     if (shouldMask === false) {
       return {
         shouldMask: false,
@@ -77840,10 +77894,11 @@ var queueManager = {
   isAnalyzing: false,
   dataQueue: [],
   analyzer: null,
+  modelLoaded: false,
   init: async function() {
     this.listenRequest();
     this.analyzer = new analyzer_default();
-    await this.analyzer.init();
+    this.modelLoaded = await this.analyzer.init();
   },
   addToQueue: async function(data) {
     this.dataQueue.push(data);
@@ -77861,6 +77916,11 @@ var queueManager = {
   processQueue: async function() {
     if (this.dataQueue.length <= 0) {
       this.isAnalyzing = false;
+      return;
+    }
+    if (!this.modelLoaded) {
+      await new Promise((r) => setTimeout(r, 2e3));
+      this.processQueue();
       return;
     }
     this.isAnalyzing = true;

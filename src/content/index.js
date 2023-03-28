@@ -3,13 +3,15 @@ const hvf = {
 
   // Initialize the extension
   init: function () {
-    this.triggerScanning();
-    this.receiveMedia();
 
     // wait for the page to load
     window.addEventListener(
       "load",
       () => {
+        document.body.classList.add("hvf-extension-loaded");
+        // this.triggerScanning();
+        this.receiveMedia();
+
         setTimeout(() => {
           this.listenUrlUpdate();
         }, 1000);
@@ -32,17 +34,22 @@ const hvf = {
     return result;
   },
 
+  throttleWaiting: false, // Initially, we're not waiting
   throttle: function (callback, limit) {
-    var waiting = false; // Initially, we're not waiting
     return function () {
       // We return a throttled function
-      if (!waiting) {
+      if (!this.throttleWaiting) {
         // If we're not waiting
-        callback.apply(this, arguments); // Execute users function
-        waiting = true; // Prevent future invocations
+        try {
+          callback.apply(this, arguments); // Execute users function
+        } catch (error) {
+          console.log("Error executing callback in throttle");
+          console.log(error);
+        }
+        this.throttleWaiting = true; // Prevent future invocations
         setTimeout(function () {
           // After a period of time
-          waiting = false; // And allow future invocations
+          this.throttleWaiting = false; // And allow future invocations
         }, limit);
       }
     };
@@ -221,7 +228,7 @@ const hvf = {
         }
       }
 
-      this.triggerScanning();
+      hvf.triggerScanning();
     });
 
     // Start observing the target node for configured mutations
@@ -230,6 +237,13 @@ const hvf = {
     //   subtree: true,
     //   attributes: true,
     // });
+
+    // forget about the mutation observer
+    // it's not working as expected
+    // lets use the timer instead
+    setInterval(() => {
+      hvf.triggerScanning();
+    }, 2000);
 
     // Start observing the scroll event
     document.addEventListener(

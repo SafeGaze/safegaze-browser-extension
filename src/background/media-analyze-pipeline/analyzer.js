@@ -1,14 +1,16 @@
 import * as tf from `@tensorflow/tfjs`;
 import GenderFaceDetection from '../tf-models/face-api/GenderFaceDetection.js';
-import Segmenter from '../tf-models/bodypix/Segmenter.js';
+import bodySegmenter from '../tf-models/segmenter/bodySegmenter.js';
+import selfieSegmenter from '../tf-models/segmenter/selfieSegmenter.js';
 import DrawMask from '../tf-models/mask/DrawMask.js';
 class analyzer {
     constructor() {
         // canvas
         this.frameCanvas = new OffscreenCanvas(400, 400);
-        this.frameCtx = this.frameCanvas.getContext('2d');
+        this.frameCtx = this.frameCanvas.getContext('2d', { willReadFrequently: true });
         this.data = {};
         this.n = 0;
+        this.modelLoaded = false;
     }
 
     init = async () => {
@@ -21,15 +23,25 @@ class analyzer {
         await tf.enableProdMode();
         await tf.ready();
 
-        // faceapi
-        this.genderFaceDetection = new GenderFaceDetection();
-        await this.genderFaceDetection.load();
-        console.log('faceapi loaded');
+        try {
+            // faceapi
+            this.genderFaceDetection = new GenderFaceDetection();
+            await this.genderFaceDetection.load();
 
-        // bodypix
-        this.segmenter = new Segmenter();
-        await this.segmenter.load();
-        console.log('faceapi loaded');
+            // bodypix
+            this.bodySegmenter = new bodySegmenter();
+            await this.bodySegmenter.load();
+
+            // selfie           
+            this.selfieSegmenter = new selfieSegmenter();
+            await this.selfieSegmenter.load();
+            this.modelLoaded = true;
+        } catch (error) {
+            console.log("Error loading models");
+            console.log(error);
+        }
+
+        return this.modelLoaded;
     };
 
     // draws the image to the canvas and returns the image data
@@ -64,6 +76,15 @@ class analyzer {
     };
 
     analyze = async (data) => {
+        
+        if (this.modelLoaded === false) {
+            return {
+                shouldMask: false,
+                maskedUrl: null,
+                invalidMedia: true
+            };
+        }
+
         this.data = data;
         let imageData = null;
 
@@ -77,13 +98,20 @@ class analyzer {
             };
         }
 
-        const [genderData, people] = await Promise.all([
+        const [genderData, people, selfie] = await Promise.all([
             this.genderFaceDetection.detect(this.frameCanvas),
-            this.segmenter.segment(imageData)
+            this.bodySegmenter.segment(imageData),
+            this.selfieSegmenter.segment(imageData)
         ]);
 
         const drawMask = new DrawMask();
-        const shouldMask = await drawMask.draw(this.frameCtx, imageData, people, genderData);
+        let shouldMask = false;
+        try {
+            shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+        } catch (error) {
+            console.log('Error drawing mask');
+            console.log(error);
+        }
 
         if (shouldMask === false) {
             return {

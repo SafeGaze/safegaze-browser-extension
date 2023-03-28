@@ -40,7 +40,6 @@ function createElement(element) {
 			canvas.remove = () => { console.log('nope'); };
 			return canvas;
 		default:
-			console.log('arg', element);
 			break;
 	}
 }
