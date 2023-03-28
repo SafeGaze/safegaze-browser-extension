@@ -77854,15 +77854,15 @@ var analyzer = class {
         invalidMedia: true
       };
     }
-    const [genderData, people, selfie] = await Promise.all([
-      this.genderFaceDetection.detect(this.frameCanvas),
+    const [people, selfie] = await Promise.all([
+      // this.genderFaceDetection.detect(this.frameCanvas),
       this.bodySegmenter.segment(imageData),
       this.selfieSegmenter.segment(imageData)
     ]);
     const drawMask = new DrawMask();
     let shouldMask = false;
     try {
-      shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+      shouldMask = await drawMask.draw(this.frameCtx, imageData, null, people, selfie);
     } catch (error) {
       console.log("Error drawing mask");
       console.log(error);
