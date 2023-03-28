@@ -24,7 +24,8 @@ export default class selfieSegmenter {
                 canvas
             );
         } catch (error) {
-
+            console.log("Error selfie segmenting");
+            console.log(error);
         }
 
 

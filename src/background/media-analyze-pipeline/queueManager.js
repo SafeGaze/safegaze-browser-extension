@@ -5,16 +5,16 @@ const queueManager = {
     isAnalyzing: false,
     dataQueue: [],
     analyzer: null,
+    modelLoaded: false,
 
     init: async function () {
         this.listenRequest();
 
         this.analyzer = new analyzerClass();
-        await this.analyzer.init();
+        this.modelLoaded = await this.analyzer.init();
     },
 
     addToQueue: async function (data) {
-        // console.log('addToQueue', data.baseObject.domObjectIndex);
         this.dataQueue.push(data);
         if (!this.isAnalyzing) {
             this.processQueue();
@@ -30,24 +30,29 @@ const queueManager = {
     },
 
     processQueue: async function () {
-        // console.log("processQueue", this.dataQueue.length);
 
         if (this.dataQueue.length <= 0) {
             this.isAnalyzing = false;
             return;
         }
+
+        if(!this.modelLoaded) {
+            await new Promise(r => setTimeout(r, 2000));
+            this.processQueue();
+            return;
+        }
+
         this.isAnalyzing = true;
 
         let data = this.dataQueue.shift();
         let result = await this.analyzer.analyze(data);
 
-        // console.log('addToQueue', data.baseObject.domObjectIndex, data.mediaUrl, result);
 
         if(result === null) {
             this.processQueue();
             return;
         }
-        // console.log(Object.assign(data, result));
+
         chrome.tabs.sendMessage(data.tabID,
             {
                 action: "HVF-MEDIA-ANALYSIS-REPORT",

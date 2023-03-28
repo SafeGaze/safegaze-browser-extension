@@ -70452,7 +70452,6 @@ function createElement(element) {
       };
       return canvas;
     default:
-      console.log("arg", element);
       break;
   }
 }
@@ -76447,7 +76446,7 @@ function mr(o, t = new z()) {
 
 // src/background/tf-models/face-api/GenderFaceDetection.js
 var GenderFaceDetection = class {
-  modelPath = "http://tf-person-masking-prototype.test/dist/face-api-models";
+  modelPath = "https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models";
   minScore = 0.3;
   // minimum score
   maxResults = 20;
@@ -76464,7 +76463,14 @@ var GenderFaceDetection = class {
     const engine2 = await engine();
   };
   detect = async (input2) => {
-    const dataSSDMobileNet = await mr(input2, this.optionsSSDMobileNet).withAgeAndGender();
+    let dataSSDMobileNet = null;
+    try {
+      dataSSDMobileNet = await mr(input2, this.optionsSSDMobileNet).withAgeAndGender();
+      return dataSSDMobileNet;
+    } catch (error) {
+      console.log("Error detecting faces");
+      console.log(error);
+    }
     return dataSSDMobileNet;
   };
 };
@@ -77677,6 +77683,8 @@ var Segmenter = class {
         this.bodySegmentationConfig
       );
     } catch (error) {
+      console.log("Error body segmenting");
+      console.log(error);
     }
     return segmentation;
   };
@@ -77702,6 +77710,8 @@ var selfieSegmenter = class {
         canvas
       );
     } catch (error) {
+      console.log("Error selfie segmenting");
+      console.log(error);
     }
     return segmentation;
   };
@@ -77777,24 +77787,29 @@ var DrawMask = class {
 var analyzer = class {
   constructor() {
     this.frameCanvas = new OffscreenCanvas(400, 400);
-    this.frameCtx = this.frameCanvas.getContext("2d");
+    this.frameCtx = this.frameCanvas.getContext("2d", { willReadFrequently: true });
     this.data = {};
     this.n = 0;
+    this.modelLoaded = false;
   }
   init = async () => {
     await setBackend("webgl");
     await ready();
     await enableProdMode();
     await ready();
-    this.genderFaceDetection = new GenderFaceDetection();
-    await this.genderFaceDetection.load();
-    console.log("faceapi loaded");
-    this.bodySegmenter = new Segmenter();
-    await this.bodySegmenter.load();
-    console.log("bodypix loaded");
-    this.selfieSegmenter = new selfieSegmenter();
-    await this.selfieSegmenter.load();
-    console.log("selfie loaded");
+    try {
+      this.genderFaceDetection = new GenderFaceDetection();
+      await this.genderFaceDetection.load();
+      this.bodySegmenter = new Segmenter();
+      await this.bodySegmenter.load();
+      this.selfieSegmenter = new selfieSegmenter();
+      await this.selfieSegmenter.load();
+      this.modelLoaded = true;
+    } catch (error) {
+      console.log("Error loading models");
+      console.log(error);
+    }
+    return this.modelLoaded;
   };
   // draws the image to the canvas and returns the image data
   drawImage = async (imageUrl) => {
@@ -77821,6 +77836,13 @@ var analyzer = class {
     return blob;
   };
   analyze = async (data) => {
+    if (this.modelLoaded === false) {
+      return {
+        shouldMask: false,
+        maskedUrl: null,
+        invalidMedia: true
+      };
+    }
     this.data = data;
     let imageData = null;
     try {
@@ -77838,7 +77860,13 @@ var analyzer = class {
       this.selfieSegmenter.segment(imageData)
     ]);
     const drawMask = new DrawMask();
-    const shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+    let shouldMask = false;
+    try {
+      shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+    } catch (error) {
+      console.log("Error drawing mask");
+      console.log(error);
+    }
     if (shouldMask === false) {
       return {
         shouldMask: false,
@@ -77866,10 +77894,11 @@ var queueManager = {
   isAnalyzing: false,
   dataQueue: [],
   analyzer: null,
+  modelLoaded: false,
   init: async function() {
     this.listenRequest();
     this.analyzer = new analyzer_default();
-    await this.analyzer.init();
+    this.modelLoaded = await this.analyzer.init();
   },
   addToQueue: async function(data) {
     this.dataQueue.push(data);
@@ -77887,6 +77916,11 @@ var queueManager = {
   processQueue: async function() {
     if (this.dataQueue.length <= 0) {
       this.isAnalyzing = false;
+      return;
+    }
+    if (!this.modelLoaded) {
+      await new Promise((r) => setTimeout(r, 2e3));
+      this.processQueue();
       return;
     }
     this.isAnalyzing = true;

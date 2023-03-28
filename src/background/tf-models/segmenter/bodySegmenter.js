@@ -33,7 +33,8 @@ export default class Segmenter {
                 this.bodySegmentationConfig
             );    
         } catch (error) {
-            
+            console.log("Error body segmenting");
+            console.log(error);
         }
 
 

@@ -7,9 +7,10 @@ class analyzer {
     constructor() {
         // canvas
         this.frameCanvas = new OffscreenCanvas(400, 400);
-        this.frameCtx = this.frameCanvas.getContext('2d');
+        this.frameCtx = this.frameCanvas.getContext('2d', { willReadFrequently: true });
         this.data = {};
         this.n = 0;
+        this.modelLoaded = false;
     }
 
     init = async () => {
@@ -22,20 +23,25 @@ class analyzer {
         await tf.enableProdMode();
         await tf.ready();
 
-        // faceapi
-        this.genderFaceDetection = new GenderFaceDetection();
-        await this.genderFaceDetection.load();
-        console.log('faceapi loaded');
+        try {
+            // faceapi
+            this.genderFaceDetection = new GenderFaceDetection();
+            await this.genderFaceDetection.load();
 
-        // bodypix
-        this.bodySegmenter = new bodySegmenter();
-        await this.bodySegmenter.load();
-        console.log('bodypix loaded');
+            // bodypix
+            this.bodySegmenter = new bodySegmenter();
+            await this.bodySegmenter.load();
 
-        // selfie           
-        this.selfieSegmenter = new selfieSegmenter();
-        await this.selfieSegmenter.load();
-        console.log('selfie loaded');
+            // selfie           
+            this.selfieSegmenter = new selfieSegmenter();
+            await this.selfieSegmenter.load();
+            this.modelLoaded = true;
+        } catch (error) {
+            console.log("Error loading models");
+            console.log(error);
+        }
+
+        return this.modelLoaded;
     };
 
     // draws the image to the canvas and returns the image data
@@ -70,6 +76,15 @@ class analyzer {
     };
 
     analyze = async (data) => {
+        
+        if (this.modelLoaded === false) {
+            return {
+                shouldMask: false,
+                maskedUrl: null,
+                invalidMedia: true
+            };
+        }
+
         this.data = data;
         let imageData = null;
 
@@ -90,7 +105,13 @@ class analyzer {
         ]);
 
         const drawMask = new DrawMask();
-        const shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+        let shouldMask = false;
+        try {
+            shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
+        } catch (error) {
+            console.log('Error drawing mask');
+            console.log(error);
+        }
 
         if (shouldMask === false) {
             return {
