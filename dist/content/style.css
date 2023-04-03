@@ -10,7 +10,3 @@ body image.hvf-analyzed,
 body image.hvf-invalid-img {
   opacity: 1 !important;
 }
-
-iframe {
-  /* filter: blur(10px) !important; */
-}

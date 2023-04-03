@@ -115,7 +115,7 @@ const hvf = {
         // let renderCycle = media[i].getAttribute('hvf-render-cycle');
         // if (renderCycle && +renderCycle > 10) {
         //   media[i].classList.add("hvf-too-many-render");
-        //   // continue;
+          // continue;
         // }
         // media[i].setAttribute("hvf-render-cycle", (+renderCycle + 1 || 1));
 
@@ -125,7 +125,6 @@ const hvf = {
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
 
-        // console.log(this.domObjectIndex);
         let payload = {
           mediaUrl: url,
           mediaType:
