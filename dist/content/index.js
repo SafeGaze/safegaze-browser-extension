@@ -1,6 +1,7 @@
 // src/content/index.js
 var hvf = {
   domObjectIndex: 0,
+  interval: null,
   // Initialize the extension
   init: function() {
     window.addEventListener(
@@ -43,7 +44,7 @@ var hvf = {
   },
   // Send media to the background script
   sendMedia: function() {
-    let media = document.querySelectorAll("body *");
+    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid)");
     for (let i = 0; i < media.length; i++) {
       const backgroundImage = window.getComputedStyle(media[i]).backgroundImage || media[i].style.backgroundImage;
       const backgroundImageUrl = backgroundImage.slice(5, -2);
@@ -62,6 +63,7 @@ var hvf = {
       }
       let isLoaded = media[i].complete && media[i].naturalHeight !== 0;
       if ((media[i].tagName == "image" || hasBackgroundImage || isLoaded) && url && url.length > 0) {
+        console.log("sending data to background script");
         this.domObjectIndex++;
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
@@ -142,7 +144,10 @@ var hvf = {
       }
       hvf.triggerScanning();
     });
-    setInterval(() => {
+    hvf.interval = setInterval(() => {
+      if (document.hidden) {
+        return;
+      }
       hvf.triggerScanning();
     }, 2e3);
     document.addEventListener(

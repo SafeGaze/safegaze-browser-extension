@@ -77818,7 +77818,7 @@ var analyzer = class {
     let bitmap = await createImageBitmap(img);
     this.frameCanvas.width = bitmap.width;
     this.frameCanvas.height = bitmap.height;
-    this.frameCtx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
+    await this.frameCtx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
     return this.frameCtx.getImageData(0, 0, bitmap.width, bitmap.height);
   };
   blobToBase64 = (blob) => {
@@ -77854,11 +77854,8 @@ var analyzer = class {
         invalidMedia: true
       };
     }
-    const [people, selfie] = await Promise.all([
-      // this.genderFaceDetection.detect(this.frameCanvas),
-      this.bodySegmenter.segment(imageData),
-      this.selfieSegmenter.segment(imageData)
-    ]);
+    const people = await this.bodySegmenter.segment(imageData);
+    const selfie = await this.selfieSegmenter.segment(imageData);
     const drawMask = new DrawMask();
     let shouldMask = false;
     try {
@@ -77873,12 +77870,6 @@ var analyzer = class {
         maskedUrl: null
       };
     }
-    this.frameCtx.fillStyle = "#FF0000";
-    this.frameCtx.fillRect(10, 10, 30, 20);
-    this.frameCtx.fillStyle = "#00FF00";
-    this.frameCtx.font = "40px Arial";
-    this.frameCtx.fillText("filtered" + this.n, 10, 40);
-    this.n++;
     let blob = await this.canvasToBlob(this.frameCanvas);
     let base64 = await this.blobToBase64(blob);
     return {
@@ -77895,6 +77886,7 @@ var queueManager = {
   dataQueue: [],
   analyzer: null,
   modelLoaded: false,
+  overloadTimeout: null,
   init: async function() {
     this.listenRequest();
     this.analyzer = new analyzer_default();
@@ -77913,6 +77905,16 @@ var queueManager = {
       }
     });
   },
+  getActiveTabId: async function() {
+    let queryOptions = { active: true, currentWindow: true };
+    let [tab] = await chrome.tabs.query(queryOptions);
+    return tab?.id || 0;
+  },
+  getAllTabIds: async function() {
+    let queryOptions = {};
+    let tabs = await chrome.tabs.query(queryOptions);
+    return tabs.map((tab) => tab.id);
+  },
   processQueue: async function() {
     if (this.dataQueue.length <= 0) {
       this.isAnalyzing = false;
@@ -77923,8 +77925,25 @@ var queueManager = {
       this.processQueue();
       return;
     }
+    this.overloadTimeout = 500;
+    await new Promise((r) => setTimeout(r, this.overloadTimeout));
     this.isAnalyzing = true;
     let data = this.dataQueue.shift();
+    if (typeof data === "undefined") {
+      this.isAnalyzing = false;
+      return;
+    }
+    const activeTabId = await this.getActiveTabId();
+    if (data.tabID !== activeTabId) {
+      let allTabIds = await this.getAllTabIds();
+      if (allTabIds.includes(data.tabID)) {
+        console.log("tab is in current window", { tabId: data.tabID, allTabIds });
+        this.dataQueue.push(data);
+      }
+      this.overloadTimeout = 300;
+      this.processQueue();
+      return;
+    }
     let result = await this.analyzer.analyze(data);
     if (result === null) {
       this.processQueue();

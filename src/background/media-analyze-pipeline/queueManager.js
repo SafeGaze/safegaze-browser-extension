@@ -6,6 +6,7 @@ const queueManager = {
     dataQueue: [],
     analyzer: null,
     modelLoaded: false,
+    overloadTimeout: null,
 
     init: async function () {
         this.listenRequest();
@@ -29,6 +30,18 @@ const queueManager = {
         });
     },
 
+    getActiveTabId: async function () {
+        let queryOptions = { active: true, currentWindow: true };
+        let [tab] = await chrome.tabs.query(queryOptions);
+        return tab?.id || 0;
+    },
+
+    getAllTabIds: async function () {
+        let queryOptions = {  };
+        let tabs = await chrome.tabs.query(queryOptions);
+        return tabs.map(tab => tab.id);
+    },
+
     processQueue: async function () {
 
         if (this.dataQueue.length <= 0) {
@@ -42,9 +55,45 @@ const queueManager = {
             return;
         }
 
-        this.isAnalyzing = true;
+        // reset the overload timeout
+        this.overloadTimeout = 500;
 
+        // wait 500ms to avoid overloading the browser
+        await new Promise(r => setTimeout(r, this.overloadTimeout));
+
+        this.isAnalyzing = true;
         let data = this.dataQueue.shift();
+        // console.log({data, dataQueue: this.dataQueue});
+        
+        if(typeof data === "undefined") {
+            this.isAnalyzing = false;
+            return;
+        }
+        
+        // if the tab is not active and within current window
+        const activeTabId = await this.getActiveTabId();
+
+        if(data.tabID !== activeTabId) {
+            // console.log("tab is not active", { tabId: data.tabID, activeTabId});
+            // if the tab is not active and within current window
+            // add this data to the end of the queue
+            let allTabIds = await this.getAllTabIds();
+
+            // console.log({allTabIds, tabId: data.tabID});
+
+            if(allTabIds.includes(data.tabID)){
+                console.log("tab is in current window", { tabId: data.tabID, allTabIds});
+                this.dataQueue.push(data);
+            }
+
+            // decrease the overload timeout
+            this.overloadTimeout = 300;
+
+            // skip the analysis
+            this.processQueue(); 
+            return;
+        }
+
         let result = await this.analyzer.analyze(data);
 
 

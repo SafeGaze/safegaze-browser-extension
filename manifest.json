@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Halalz visual filter browser extension",
+  "name": "SafeGaze Browser Extension",
   "version": "1.0.0",
-  "description": "Halalz visual filter browser extension",
+  "description": "SafeGaze detects and masks potentially haram & sensitive contents in your browser.",
   "background": {
     "service_worker": "dist/background/index.js",
     "type": "module"

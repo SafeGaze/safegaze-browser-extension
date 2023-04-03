@@ -53,7 +53,7 @@ class analyzer {
 
         this.frameCanvas.width = bitmap.width;
         this.frameCanvas.height = bitmap.height;
-        this.frameCtx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
+        await this.frameCtx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
 
         return this.frameCtx.getImageData(0, 0, bitmap.width, bitmap.height);
     };
@@ -98,11 +98,15 @@ class analyzer {
             };
         }
 
-        const [people, selfie] = await Promise.all([
-            // this.genderFaceDetection.detect(this.frameCanvas),
-            this.bodySegmenter.segment(imageData),
-            this.selfieSegmenter.segment(imageData)
-        ]);
+        // const [people, selfie] = await Promise.all([
+        //     // this.genderFaceDetection.detect(this.frameCanvas),
+        //     this.bodySegmenter.segment(imageData),
+        //     this.selfieSegmenter.segment(imageData)
+        // ]);
+
+        const people = await this.bodySegmenter.segment(imageData);
+        const selfie = await this.selfieSegmenter.segment(imageData);
+        // const genderFaceData = await this.genderFaceDetection.detect(this.frameCanvas);
 
         const drawMask = new DrawMask();
         let shouldMask = false;
@@ -121,12 +125,12 @@ class analyzer {
         }
 
         // testing
-        this.frameCtx.fillStyle = "#FF0000";
-        this.frameCtx.fillRect(10, 10, 30, 20);
-        this.frameCtx.fillStyle = "#00FF00";
-        this.frameCtx.font = "40px Arial";
-        this.frameCtx.fillText("filtered" + this.n, 10, 40);
-        this.n++;
+        // this.frameCtx.fillStyle = "#FF0000";
+        // this.frameCtx.fillRect(10, 10, 30, 20);
+        // this.frameCtx.fillStyle = "#00FF00";
+        // this.frameCtx.font = "40px Arial";
+        // this.frameCtx.fillText("filtered" + this.n, 10, 40);
+        // this.n++;
 
         let blob = await this.canvasToBlob(this.frameCanvas);
         let base64 = await this.blobToBase64(blob);

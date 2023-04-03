@@ -1,5 +1,6 @@
 const hvf = {
   domObjectIndex: 0,
+  interval: null,
 
   // Initialize the extension
   init: function () {
@@ -64,7 +65,7 @@ const hvf = {
     // console.log("sending Media");
     // Get all media
     // currently supports images only
-    let media = document.querySelectorAll("body *");
+    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid)");
 
     for (let i = 0; i < media.length; i++) {
       // Is it background image?
@@ -118,6 +119,8 @@ const hvf = {
         // }
         // media[i].setAttribute("hvf-render-cycle", (+renderCycle + 1 || 1));
 
+        console.log('sending data to background script');
+
         this.domObjectIndex++;
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
@@ -138,6 +141,8 @@ const hvf = {
             shouldMask: false,
           },
         };
+
+        
 
         chrome.runtime.sendMessage(
           {
@@ -241,7 +246,11 @@ const hvf = {
     // forget about the mutation observer
     // it's not working as expected
     // lets use the timer instead
-    setInterval(() => {
+    hvf.interval = setInterval(() => {
+      // if window not active then stop the scanning
+      if (document.hidden) {
+        return;
+      }
       hvf.triggerScanning();
     }, 2000);
 
