@@ -1,1 +1,1 @@
-# halalz-visual-filter-browser-extension
+# SafeGaze Browser Extension

@@ -10,7 +10,7 @@ const hvf = {
       "load",
       () => {
         document.body.classList.add("hvf-extension-loaded");
-        // this.triggerScanning();
+        this.triggerScanning();
         this.receiveMedia();
 
         setTimeout(() => {
@@ -65,7 +65,7 @@ const hvf = {
     // console.log("sending Media");
     // Get all media
     // currently supports images only
-    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid)");
+    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render)");
 
     for (let i = 0; i < media.length; i++) {
       // Is it background image?
@@ -82,8 +82,7 @@ const hvf = {
         media[i].classList.contains("hvf-too-many-render") ||
         media[i].classList.contains("hvf-analyzing") ||
         media[i].classList.contains("hvf-analyzed") ||
-        (media[i].classList.contains("hvf-invalid") &&
-          media[i].tagName !== "IMG" &&
+        (media[i].tagName !== "IMG" &&
           media[i].tagName !== "image") ||
         this.isElementInViewport(media[i]) === false ||
         (!hasBackgroundImage &&
@@ -122,6 +121,7 @@ const hvf = {
         console.log('sending data to background script');
 
         this.domObjectIndex++;
+        media[i].classList.remove("hvf-invalid");
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
 
@@ -198,6 +198,11 @@ const hvf = {
   listenUrlUpdate: function () {
     // Callback function to execute when mutations are observed
     let observer = new MutationObserver((mutationList) => {
+      // if window is not focused return
+      if (!document.hasFocus()) {
+        return;
+      }
+
       for (const mutation of mutationList) {
         if (mutation.type !== "attributes") {
           continue;
@@ -236,22 +241,22 @@ const hvf = {
     });
 
     // Start observing the target node for configured mutations
-    // observer.observe(document.body, {
-    //   childList: true,
-    //   subtree: true,
-    //   attributes: true,
-    // });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
 
     // forget about the mutation observer
     // it's not working as expected
     // lets use the timer instead
-    hvf.interval = setInterval(() => {
-      // if window not active then stop the scanning
-      if (document.hidden) {
-        return;
-      }
-      hvf.triggerScanning();
-    }, 2000);
+    // hvf.interval = setInterval(() => {
+    //   // if window not active then stop the scanning
+    //   if (document.hidden) {
+    //     return;
+    //   }
+    //   hvf.triggerScanning();
+    // }, 2000);
 
     // Start observing the scroll event
     document.addEventListener(

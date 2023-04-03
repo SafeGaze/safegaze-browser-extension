@@ -8,6 +8,7 @@ var hvf = {
       "load",
       () => {
         document.body.classList.add("hvf-extension-loaded");
+        this.triggerScanning();
         this.receiveMedia();
         setTimeout(() => {
           this.listenUrlUpdate();
@@ -44,12 +45,12 @@ var hvf = {
   },
   // Send media to the background script
   sendMedia: function() {
-    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid)");
+    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render)");
     for (let i = 0; i < media.length; i++) {
       const backgroundImage = window.getComputedStyle(media[i]).backgroundImage || media[i].style.backgroundImage;
       const backgroundImageUrl = backgroundImage.slice(5, -2);
       const hasBackgroundImage = backgroundImage?.startsWith("url(");
-      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || media[i].classList.contains("hvf-invalid") && media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
+      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
         continue;
       }
       let url = media[i].src;
@@ -65,6 +66,7 @@ var hvf = {
       if ((media[i].tagName == "image" || hasBackgroundImage || isLoaded) && url && url.length > 0) {
         console.log("sending data to background script");
         this.domObjectIndex++;
+        media[i].classList.remove("hvf-invalid");
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
         let payload = {
@@ -122,6 +124,9 @@ var hvf = {
   },
   listenUrlUpdate: function() {
     let observer = new MutationObserver((mutationList) => {
+      if (!document.hasFocus()) {
+        return;
+      }
       for (const mutation of mutationList) {
         if (mutation.type !== "attributes") {
           continue;
@@ -144,12 +149,11 @@ var hvf = {
       }
       hvf.triggerScanning();
     });
-    hvf.interval = setInterval(() => {
-      if (document.hidden) {
-        return;
-      }
-      hvf.triggerScanning();
-    }, 2e3);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true
+    });
     document.addEventListener(
       "scroll",
       () => {

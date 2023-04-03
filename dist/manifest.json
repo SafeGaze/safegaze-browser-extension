@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "description": "SafeGaze detects and masks potentially haram & sensitive contents in your browser.",
   "background": {
-    "service_worker": "dist/background/index.js",
+    "service_worker": "background/index.js",
     "type": "module"
   },
-  "options_page": "options.html",
+  "options_page": "settings/index.html",
   "action": {
     "default_icon": {
       "16": "images/safegaze-icon.png",
@@ -23,10 +23,9 @@
   ],
   "content_scripts": [
     {
-      "all_frames": true,
       "matches": ["<all_urls>"],
-      "js": ["dist/content/index.js"],
-      "css": ["dist/content/style.css"],
+      "js": ["content/index.js"],
+      "css": ["content/style.css"],
       "run_at": "document_end"
     }
   ]
