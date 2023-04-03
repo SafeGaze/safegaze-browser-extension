@@ -1,133 +1,268 @@
-import maskingPipeline from "../background/masking-pipeline/maskingPipeline.js";
+const hvf = {
+  domObjectIndex: 0,
+  interval: null,
 
-const maskingPipelineInstance = new maskingPipeline();
-maskingPipelineInstance.loadModel();
-var n = 0;
+  // Initialize the extension
+  init: function () {
 
-const isInViewport = function (elem) {
-  const bounding = elem.getBoundingClientRect();
-  return (
-    bounding.top >= 0 &&
-    // bounding.left >= -100 &&
-    // bounding.right - 100 <=
-    //   (window.innerWidth || document.documentElement.clientWidth) &&
-    bounding.bottom <=
-    (window.innerHeight || document.documentElement.clientHeight)
-  );
-};
-const isBase64Img = (imgSrc) => {
-  return imgSrc.startsWith("data:image/");
-};
+    // wait for the page to load
+    window.addEventListener(
+      "load",
+      () => {
+        document.body.classList.add("hvf-extension-loaded");
+        // this.triggerScanning();
+        this.receiveMedia();
 
-const replaceImages = async () => {
-  let getAllImgs =
-    document.querySelectorAll(
-      "img:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img), image:not(.halal-loading):not(.halal-processed):not(.halal-invalid-img)"
-    ) || [];
+        setTimeout(() => {
+          this.listenUrlUpdate();
+        }, 1000);
+      },
+      false
+    );
+  },
 
+  isElementInViewport: function (el) {
+    let rect = el.getBoundingClientRect();
+    let result =
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <=
+        (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
-  for await (const img of getAllImgs) {
-    let imgUrl = img.src;
-    const oldImg = img;
-    if (img.tagName === "image") {
-      imgUrl = img.getAttribute("xlink:href");
-    }
+    // console.log(result);
 
-    if (!imgUrl || isBase64Img(imgUrl)) {
-      continue;
-    }
+    return result;
+  },
 
-    if (isInViewport(img)) {
-      n++;
-      img.classList.add("halal-loading");
-      console.log(n);
-      const data = await maskingPipelineInstance.processImage(imgUrl, isBase64Img(imgUrl), n, img);
-
-      let response = data.response;
-      // let img = img;
-      console.log("request:response", n + ' ' + data.n);
-      if (n !== data.n) {
-        // return;
-      }
-      // let latestImgUrl = img.src;
-
-      // if (img.tagName === "image") {
-      //   latestImgUrl = img.getAttribute("xlink:href");
-      // }
-
-      if (response) {
-
-        if (img.tagName === "image") {
-          img.setAttribute("xlink:href", response);
-        } else {
-          img.src = response;
+  throttleWaiting: false, // Initially, we're not waiting
+  throttle: function (callback, limit) {
+    return function () {
+      // We return a throttled function
+      if (!this.throttleWaiting) {
+        // If we're not waiting
+        try {
+          callback.apply(this, arguments); // Execute users function
+        } catch (error) {
+          console.log("Error executing callback in throttle");
+          console.log(error);
         }
-        img.classList.add("halal-processed");
-        img.classList.remove("halal-invalid-img");
+        this.throttleWaiting = true; // Prevent future invocations
+        setTimeout(function () {
+          // After a period of time
+          this.throttleWaiting = false; // And allow future invocations
+        }, limit);
       }
-      if (!response) {
-        img.classList.add("halal-invalid-img");
+    };
+  },
+
+  triggerScanning: function () {
+    this.throttle(this.sendMedia(), 1000);
+  },
+
+  // Send media to the background script
+  sendMedia: function () {
+    // console.log("sending Media");
+    // Get all media
+    // currently supports images only
+    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid)");
+
+    for (let i = 0; i < media.length; i++) {
+      // Is it background image?
+      const backgroundImage =
+        window.getComputedStyle(media[i]).backgroundImage ||
+        media[i].style.backgroundImage;
+      const backgroundImageUrl = backgroundImage.slice(5, -2);
+      const hasBackgroundImage = backgroundImage?.startsWith("url(");
+      // console.log('foo');
+      // looking for new images only
+      // matching hvf-analyzing and hvf-analyzed classes
+      if (
+        media[i].classList.contains("hvf-unidentified-error") ||
+        media[i].classList.contains("hvf-too-many-render") ||
+        media[i].classList.contains("hvf-analyzing") ||
+        media[i].classList.contains("hvf-analyzed") ||
+        (media[i].classList.contains("hvf-invalid") &&
+          media[i].tagName !== "IMG" &&
+          media[i].tagName !== "image") ||
+        this.isElementInViewport(media[i]) === false ||
+        (!hasBackgroundImage &&
+          media[i].tagName !== "IMG" &&
+          media[i].tagName !== "image")
+      ) {
+        continue;
       }
-      img.classList.remove("halal-loading");
 
-      // chrome.runtime.sendMessage(
-      //   {
-      //     type: "processImage",
-      //     imgUrl,
-      //     isBase64Img: isBase64Img(imgUrl),
-      //   },
-      //   (response) => {
-      //     let latestImgUrl = img.src;
+      // Get image url and src attribute
+      let url = media[i].src;
+      let srcAttr = "src";
+      if (!url || url.length === 0) {
+        url = media[i].getAttribute("xlink:href");
+        srcAttr = "xlink:href";
+      }
+      // If has background image then updating the url
+      if (hasBackgroundImage && media[i].tagName !== "IMG") {
+        url = backgroundImageUrl;
+      }
 
-      //     if (img.tagName === "image") {
-      //       latestImgUrl = img.getAttribute("xlink:href");
-      //     }
+      let isLoaded = media[i].complete && media[i].naturalHeight !== 0;
 
-      //     if (response && latestImgUrl === imgUrl) {
-      //       console.log(img, imgUrl);
-      //       if (img.tagName === "image") {
-      //         img.setAttribute("xlink:href", response);
-      //       } else {
-      //         img.src = response;
-      //       }
-      //       img.classList.add("halal-processed");
-      //       img.classList.remove("halal-invalid-img");
-      //     }
-      //     if (!response) {
-      //       img.classList.add("halal-invalid-img");
-      //     }
-      //     img.classList.remove("halal-loading");
-      //   }
-      // );
+      if (
+        (media[i].tagName == "image" || hasBackgroundImage || isLoaded) &&
+        url &&
+        url.length > 0
+      ) {
+        // let renderCycle = media[i].getAttribute('hvf-render-cycle');
+        // if (renderCycle && +renderCycle > 10) {
+        //   media[i].classList.add("hvf-too-many-render");
+        //   // continue;
+        // }
+        // media[i].setAttribute("hvf-render-cycle", (+renderCycle + 1 || 1));
+
+        console.log('sending data to background script');
+
+        this.domObjectIndex++;
+        media[i].classList.add("hvf-analyzing");
+        media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
+
+        // console.log(this.domObjectIndex);
+        let payload = {
+          mediaUrl: url,
+          mediaType:
+            hasBackgroundImage &&
+            media[i].tagName !== "IMG" &&
+            media[i].tagName !== "image"
+              ? "backgroundImage"
+              : "image",
+          baseObject: {
+            originalUrl: url,
+            domObjectIndex: this.domObjectIndex,
+            srcAttr: srcAttr,
+            shouldMask: false,
+          },
+        };
+
+        
+
+        chrome.runtime.sendMessage(
+          {
+            action: "HVF-MEDIA-ANALYSIS-REQUEST",
+            payload: payload,
+          },
+          (result) => {
+            if (!chrome.runtime.lastError) {
+              // message processing code goes here
+            } else {
+              // error handling code goes here
+            }
+          }
+        );
+      }
     }
-  }
+  },
+
+  // Receive media from the background script
+  receiveMedia: function () {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
+        let index = message.payload.baseObject.domObjectIndex;
+        let media = document.querySelector(".hvf-dom-id-" + index);
+
+        // console.log(message.payload);
+
+        let srcAttr = message.payload.baseObject.srcAttr;
+        let originalUrl = message.payload.baseObject.originalUrl;
+
+        if (!media) return;
+
+        if (message.payload.shouldMask && message.payload.maskedUrl) {
+          media.classList.add("hvf-masked");
+          if (message.payload.mediaType === "backgroundImage") {
+            media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
+          } else {
+            media.setAttribute(srcAttr, message.payload.maskedUrl);
+          }
+          media.setAttribute("data-hvf-original-url", originalUrl);
+        }
+
+        if (message.payload.invalidMedia === true) {
+          media.classList.add("hvf-invalid");
+        } else {
+          media.classList.add("hvf-analyzed");
+          media.classList.remove("hvf-invalid");
+        }
+        media.classList.remove("hvf-analyzing");
+      }
+    });
+  },
+
+  listenUrlUpdate: function () {
+    // Callback function to execute when mutations are observed
+    let observer = new MutationObserver((mutationList) => {
+      for (const mutation of mutationList) {
+        if (mutation.type !== "attributes") {
+          continue;
+        }
+
+        if (
+          mutation.attributeName !== "src" &&
+          mutation.attributeName !== "xlink:href" &&
+          mutation.attributeName !== "style"
+        ) {
+          continue;
+        }
+
+        if (mutation.target.classList.contains("hvf-analyzed")) {
+          continue;
+        }
+
+        let mutationImgUrl = mutation.target.src;
+
+        if (mutation.target.tagName === "image") {
+          mutationImgUrl = mutation.target.getAttribute("xlink:href");
+        }
+
+        if (
+          mutation.type === "attributes" &&
+          (mutation.target.classList.contains("hvf-analyzed") ||
+            mutation.target.classList.contains("hvf-invalid"))
+        ) {
+          mutation.target.classList.remove("hvf-analyzed");
+          mutation.target.classList.remove("hvf-analyzing");
+          mutation.target.classList.remove("hvf-invalid");
+        }
+      }
+
+      hvf.triggerScanning();
+    });
+
+    // Start observing the target node for configured mutations
+    // observer.observe(document.body, {
+    //   childList: true,
+    //   subtree: true,
+    //   attributes: true,
+    // });
+
+    // forget about the mutation observer
+    // it's not working as expected
+    // lets use the timer instead
+    hvf.interval = setInterval(() => {
+      // if window not active then stop the scanning
+      if (document.hidden) {
+        return;
+      }
+      hvf.triggerScanning();
+    }, 2000);
+
+    // Start observing the scroll event
+    document.addEventListener(
+      "scroll",
+      () => {
+        hvf.triggerScanning();
+      },
+      true
+    );
+  },
 };
 
-document.addEventListener("scroll", replaceImages);
-
-let observer = new MutationObserver((mutationList) => {
-  for (const mutation of mutationList) {
-    let mutationImgUrl = mutation.target.src;
-
-    if (mutation.target.tagName === "image") {
-      mutationImgUrl = mutation.target.getAttribute("xlink:href");
-    }
-
-    if (
-      mutation.type === "attributes" &&
-      mutation.target.classList.contains("halal-processed") &&
-      !isBase64Img(mutationImgUrl)
-    ) {
-      mutation.target.classList.remove("halal-processed");
-      mutation.target.classList.remove("halal-loading");
-    }
-  }
-
-  replaceImages();
-});
-
-observer.observe(document.body, {
-  childList: true,
-  subtree: true,
-  attributes: true,
-});
+hvf.init();

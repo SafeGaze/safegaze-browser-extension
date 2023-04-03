@@ -2,13 +2,19 @@ body img,
 body image {
   opacity: 0 !important;
 }
-body img.halal-processed,
-body image.halal-processed,
-body image.halal-invalid-img,
-body img.halal-invalid-img {
+body img.hvf-analyzed,
+/* body img.hvf-analyzing, */
+body img.hvf-invalid-img,
+body image.hvf-analyzed,
+/* body image.hvf-analyzing, */
+body image.hvf-invalid-img {
   opacity: 1 !important;
 }
 
 iframe {
+<<<<<<< HEAD
   filter: blur(10px) !important;
+=======
+  /* filter: blur(10px) !important; */
+>>>>>>> development
 }
