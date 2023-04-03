@@ -7,13 +7,20 @@
     "service_worker": "background/index.js",
     "type": "module"
   },
-  "options_page": "settings/index.html",
   "action": {
+    "default_popup": "settings/popup.html",
     "default_icon": {
       "16": "images/safegaze-icon.png",
-      "24": "images/safegaze-icon.png",
-      "32": "images/safegaze-icon.png"
+      "32": "images/safegaze-icon.png",
+      "48": "images/safegaze-icon.png",
+      "128": "images/safegaze-icon.png"
     }
+  },
+  "icons": {
+    "16": "images/safegaze-icon.png",
+    "32": "images/safegaze-icon.png",
+    "48": "images/safegaze-icon.png",
+    "128": "images/safegaze-icon.png"
   },
   "permissions": [
     "storage",
