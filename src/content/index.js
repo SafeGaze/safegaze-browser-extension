@@ -2,9 +2,23 @@ const hvf = {
   domObjectIndex: 0,
   interval: null,
 
+  maxRenderItem: 5,
+
+  is_scrolling: function () {
+    return (
+      this.lastScrollTime && new Date().getTime() < this.lastScrollTime + 500
+    );
+  },
+
+  getUrlExtension: function (url) {
+    if (!url) {
+      return "";
+    }
+    return url.split(/[#?]/)[0].split(".").pop().trim();
+  },
+
   // Initialize the extension
   init: function () {
-
     // wait for the page to load
     window.addEventListener(
       "load",
@@ -60,12 +74,89 @@ const hvf = {
     this.throttle(this.sendMedia(), 1000);
   },
 
+  removeUnUsedLoader() {
+    document.querySelectorAll(`.hvf-loader`).forEach((loader) => {
+      const domIdFromLoader = loader.getAttribute("data-dom-id");
+      const findDomFromLoader = document.querySelector(`.${domIdFromLoader}`);
+      if (!findDomFromLoader) {
+        loader.remove();
+      }
+    });
+  },
+
+  addImageLoader(media) {
+    const hvgLoader = document.querySelector(
+      ".hvf-loader-id-" + this.domObjectIndex
+    );
+    media.setAttribute(
+      "data-loader-id",
+      `hvf-loader-id-${this.domObjectIndex}`
+    );
+
+    const { top, left, width, height } = media.getBoundingClientRect();
+    if (
+      top > 0 &&
+      left > 0 &&
+      width > 0 &&
+      height > 0 &&
+      !media.querySelector("[class^=hvf-dom-]")?.length
+    ) {
+      if (!hvgLoader?.length) {
+        document.body.insertAdjacentHTML(
+          "beforeend",
+          `<div data-dom-id="hvf-dom-id-${this.domObjectIndex}" style="width: ${width}px; height: ${height}px; top: ${top}px; left: ${left}px;" class="lds-ring hvf-loader hvf-loader-id-${this.domObjectIndex}"><div></div><div></div><div></div><div></div></div>`
+        );
+      } else {
+        if (hvgLoader?.length) {
+          hvgLoader.style.width = `${width}px`;
+          hvgLoader.style.height = `${height}px`;
+          hvgLoader.style.top = `${top}px`;
+          hvgLoader.style.left = `${left}px`;
+          hvgLoader.style.display = "flex";
+        }
+      }
+    }
+  },
+
+  movePositionOfLoader() {
+    document.querySelectorAll(`.hvf-loader`).forEach((loader) => {
+      const domIdFromLoader = loader.getAttribute("data-dom-id");
+      const findDomFromLoader = document.querySelector(`.${domIdFromLoader}`);
+      if (findDomFromLoader) {
+        // move loader based if dom element position changed
+        const loaderId = findDomFromLoader.getAttribute("data-loader-id");
+        const loader = document.querySelector(`.${loaderId}`);
+        const { top, left, width, height } =
+          findDomFromLoader.getBoundingClientRect();
+        if (loader) {
+          loader.style.width = `${width}px`;
+          loader.style.height = `${height}px`;
+          loader.style.top = `${top}px`;
+          loader.style.left = `${left}px`;
+        }
+      }
+    });
+  },
+
+  removeImageLoader(media) {
+    const loaderId = media.getAttribute("data-loader-id");
+    const loader = document.querySelector(`.${loaderId}`);
+    if (loader) {
+      loader.classList.add("hvf-analyzed-loader-el");
+    }
+  },
+
   // Send media to the background script
   sendMedia: function () {
     // console.log("sending Media");
     // Get all media
     // currently supports images only
-    let media = document.querySelectorAll("body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render)");
+    let media = document.querySelectorAll(
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom)"
+    );
+
+    // remove unused loader
+    this.removeUnUsedLoader();
 
     for (let i = 0; i < media.length; i++) {
       // Is it background image?
@@ -74,6 +165,16 @@ const hvf = {
         media[i].style.backgroundImage;
       const backgroundImageUrl = backgroundImage.slice(5, -2);
       const hasBackgroundImage = backgroundImage?.startsWith("url(");
+
+      // add invalid dom class if it's not bg or image
+      if (
+        !hasBackgroundImage &&
+        media[i].tagName !== "image" &&
+        media[i].tagName !== "IMG"
+      ) {
+        media[i].classList.add("hvf-invalid-dom");
+      }
+
       // console.log('foo');
       // looking for new images only
       // matching hvf-analyzing and hvf-analyzed classes
@@ -82,8 +183,7 @@ const hvf = {
         media[i].classList.contains("hvf-too-many-render") ||
         media[i].classList.contains("hvf-analyzing") ||
         media[i].classList.contains("hvf-analyzed") ||
-        (media[i].tagName !== "IMG" &&
-          media[i].tagName !== "image") ||
+        (media[i].tagName !== "IMG" && media[i].tagName !== "image") ||
         this.isElementInViewport(media[i]) === false ||
         (!hasBackgroundImage &&
           media[i].tagName !== "IMG" &&
@@ -104,6 +204,15 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
+      // ignored svg and gif
+      if (
+        this.getUrlExtension(url) == "svg" ||
+        this.getUrlExtension(url) == "gif"
+      ) {
+        media[i].classList.add("hvf-invalid-img");
+        continue;
+      }
+
       let isLoaded = media[i].complete && media[i].naturalHeight !== 0;
 
       if (
@@ -111,19 +220,24 @@ const hvf = {
         url &&
         url.length > 0
       ) {
-        // let renderCycle = media[i].getAttribute('hvf-render-cycle');
-        // if (renderCycle && +renderCycle > 10) {
-        //   media[i].classList.add("hvf-too-many-render");
-          // continue;
-        // }
-        // media[i].setAttribute("hvf-render-cycle", (+renderCycle + 1 || 1));
+        // multiple render limit up to 5
+        let renderCycle = media[i].getAttribute("hvf-render-cycle");
 
-        console.log('sending data to background script');
+        if (renderCycle && +renderCycle > this.maxRenderItem) {
+          media[i].classList.add("hvf-too-many-render");
+          continue;
+        }
+        media[i].setAttribute("hvf-render-cycle", +renderCycle + 1 || 1);
+
+        console.log("sending data to background script");
 
         this.domObjectIndex++;
         media[i].classList.remove("hvf-invalid");
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
+
+        // added image loader
+        this.addImageLoader(media[i]);
 
         let payload = {
           mediaUrl: url,
@@ -140,8 +254,6 @@ const hvf = {
             shouldMask: false,
           },
         };
-
-        
 
         chrome.runtime.sendMessage(
           {
@@ -191,6 +303,8 @@ const hvf = {
           media.classList.remove("hvf-invalid");
         }
         media.classList.remove("hvf-analyzing");
+
+        this.removeImageLoader(media);
       }
     });
   },
@@ -203,27 +317,44 @@ const hvf = {
         return;
       }
 
+      // if scroll, then mutation observer skiping
+      if (this.is_scrolling() === true) {
+        return;
+      }
+
       for (const mutation of mutationList) {
         if (mutation.type !== "attributes") {
+          // if we add nodes, then trigger scaning
+          if (mutation.addedNodes.length) {
+            setTimeout(() => {
+              this.triggerScanning();
+            }, 1000);
+          }
+
           continue;
         }
 
         if (
           mutation.attributeName !== "src" &&
-          mutation.attributeName !== "xlink:href" &&
-          mutation.attributeName !== "style"
+          mutation.attributeName !== "xlink:href"
         ) {
           continue;
         }
 
-        if (mutation.target.classList.contains("hvf-analyzed")) {
+        // if show original image then skip rerendering
+        if (mutation.target.classList.contains("hvf-showed-original-image")) {
           continue;
         }
 
-        let mutationImgUrl = mutation.target.src;
-
+        let imgTargetSrc = mutation.target.src;
         if (mutation.target.tagName === "image") {
-          mutationImgUrl = mutation.target.getAttribute("xlink:href");
+          imgTargetSrc = mutation.target.getAttribute("xlink:href");
+        }
+
+        if (
+          mutation.target.getAttribute("data-hvf-masked-url") === imgTargetSrc
+        ) {
+          continue;
         }
 
         if (
@@ -234,10 +365,9 @@ const hvf = {
           mutation.target.classList.remove("hvf-analyzed");
           mutation.target.classList.remove("hvf-analyzing");
           mutation.target.classList.remove("hvf-invalid");
+          this.triggerScanning();
         }
       }
-
-      hvf.triggerScanning();
     });
 
     // Start observing the target node for configured mutations
@@ -258,10 +388,17 @@ const hvf = {
     //   hvf.triggerScanning();
     // }, 2000);
 
+    // move the loader element on their position while resizing
+    window.addEventListener("resize", () => {
+      this.movePositionOfLoader();
+    });
+
     // Start observing the scroll event
     document.addEventListener(
       "scroll",
       () => {
+        this.movePositionOfLoader();
+
         hvf.triggerScanning();
       },
       true
