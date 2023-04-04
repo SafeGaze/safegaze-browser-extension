@@ -125,7 +125,7 @@ var hvf = {
       if (!hasBackgroundImage && media[i].tagName !== "image" && media[i].tagName !== "IMG") {
         media[i].classList.add("hvf-invalid-dom");
       }
-      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
+      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
         continue;
       }
       let url = media[i].src;
