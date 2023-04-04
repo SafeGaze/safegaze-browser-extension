@@ -119,23 +119,25 @@ const hvf = {
   },
 
   movePositionOfLoader() {
-    document.querySelectorAll(`.hvf-loader`).forEach((loader) => {
-      const domIdFromLoader = loader.getAttribute("data-dom-id");
-      const findDomFromLoader = document.querySelector(`.${domIdFromLoader}`);
-      if (findDomFromLoader) {
-        // move loader based if dom element position changed
-        const loaderId = findDomFromLoader.getAttribute("data-loader-id");
-        const loader = document.querySelector(`.${loaderId}`);
-        const { top, left, width, height } =
-          findDomFromLoader.getBoundingClientRect();
-        if (loader) {
-          loader.style.width = `${width}px`;
-          loader.style.height = `${height}px`;
-          loader.style.top = `${top}px`;
-          loader.style.left = `${left}px`;
+    document
+      .querySelectorAll(`.hvf-loader:not(.hvf-analyzed-loader-el)`)
+      .forEach((loader) => {
+        const domIdFromLoader = loader.getAttribute("data-dom-id");
+        const findDomFromLoader = document.querySelector(`.${domIdFromLoader}`);
+        if (findDomFromLoader) {
+          // move loader based if dom element position changed
+          const loaderId = findDomFromLoader.getAttribute("data-loader-id");
+          const loader = document.querySelector(`.${loaderId}`);
+          const { top, left, width, height } =
+            findDomFromLoader.getBoundingClientRect();
+          if (loader) {
+            loader.style.width = `${width}px`;
+            loader.style.height = `${height}px`;
+            loader.style.top = `${top}px`;
+            loader.style.left = `${left}px`;
+          }
         }
-      }
-    });
+      });
   },
 
   removeImageLoader(media) {

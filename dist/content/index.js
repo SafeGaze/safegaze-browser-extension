@@ -89,7 +89,7 @@ var hvf = {
     }
   },
   movePositionOfLoader() {
-    document.querySelectorAll(`.hvf-loader`).forEach((loader) => {
+    document.querySelectorAll(`.hvf-loader:not(.hvf-analyzed-loader-el)`).forEach((loader) => {
       const domIdFromLoader = loader.getAttribute("data-dom-id");
       const findDomFromLoader = document.querySelector(`.${domIdFromLoader}`);
       if (findDomFromLoader) {
