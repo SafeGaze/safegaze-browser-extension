@@ -3,6 +3,7 @@ var hvf = {
   domObjectIndex: 0,
   interval: null,
   maxRenderItem: 5,
+  ignoreImageSize: 40,
   is_scrolling: function() {
     return this.lastScrollTime && (/* @__PURE__ */ new Date()).getTime() < this.lastScrollTime + 500;
   },
@@ -10,7 +11,7 @@ var hvf = {
     if (!url) {
       return "";
     }
-    return url.split(/[#?]/)[0].split(".").pop().trim();
+    return url.split(/[#?]/)[0].split(".").pop().trim().toLowerCase();
   },
   // Initialize the extension
   init: function() {
@@ -115,7 +116,7 @@ var hvf = {
   // Send media to the background script
   sendMedia: function() {
     let media = document.querySelectorAll(
-      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom)"
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom):not(.hvf-ignored-image)"
     );
     this.removeUnUsedLoader();
     for (let i = 0; i < media.length; i++) {
@@ -128,6 +129,11 @@ var hvf = {
       if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
         continue;
       }
+      const { width: imageWidth, height: imageHeight } = media[i].getBoundingClientRect();
+      if (imageWidth <= this.ignoreImageSize || imageHeight <= this.ignoreImageSize) {
+        media[i].classList.add("hvf-ignored-image");
+        continue;
+      }
       let url = media[i].src;
       let srcAttr = "src";
       if (!url || url.length === 0) {
@@ -137,7 +143,7 @@ var hvf = {
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
       }
-      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif") {
+      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico") {
         media[i].classList.add("hvf-invalid-img");
         continue;
       }

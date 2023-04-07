@@ -4,6 +4,8 @@ const hvf = {
 
   maxRenderItem: 5,
 
+  ignoreImageSize: 40,
+
   is_scrolling: function () {
     return (
       this.lastScrollTime && new Date().getTime() < this.lastScrollTime + 500
@@ -14,7 +16,7 @@ const hvf = {
     if (!url) {
       return "";
     }
-    return url.split(/[#?]/)[0].split(".").pop().trim();
+    return url.split(/[#?]/)[0].split(".").pop().trim().toLowerCase();
   },
 
   // Initialize the extension
@@ -154,7 +156,7 @@ const hvf = {
     // Get all media
     // currently supports images only
     let media = document.querySelectorAll(
-      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom)"
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom):not(.hvf-ignored-image)"
     );
 
     // remove unused loader
@@ -193,6 +195,17 @@ const hvf = {
         continue;
       }
 
+      // ignore if images are less than 48*48
+      const { width: imageWidth, height: imageHeight } =
+        media[i].getBoundingClientRect();
+      if (
+        imageWidth <= this.ignoreImageSize ||
+        imageHeight <= this.ignoreImageSize
+      ) {
+        media[i].classList.add("hvf-ignored-image");
+        continue;
+      }
+
       // Get image url and src attribute
       let url = media[i].src;
       let srcAttr = "src";
@@ -208,7 +221,8 @@ const hvf = {
       // ignored svg and gif
       if (
         this.getUrlExtension(url) == "svg" ||
-        this.getUrlExtension(url) == "gif"
+        this.getUrlExtension(url) == "gif" ||
+        this.getUrlExtension(url) == "ico"
       ) {
         media[i].classList.add("hvf-invalid-img");
         continue;
