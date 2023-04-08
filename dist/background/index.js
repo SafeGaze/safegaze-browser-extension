@@ -77759,9 +77759,9 @@ var DrawMask = class {
         continue;
       for (let i = 0; i < data.length; i += 4) {
         if (segmentPeople.data[i] !== 24) {
-          data[i] = 111;
-          data[i + 1] = 134;
-          data[i + 2] = 190;
+          data[i] = 255;
+          data[i + 1] = 255;
+          data[i + 2] = 255;
           data[i + 3] = 255;
         } else {
         }
@@ -77965,6 +77965,78 @@ var queueManager = {
   }
 };
 var queueManager_default = queueManager;
+
+// src/settings/database.js
+var SafeGazeDB = class {
+  db;
+  openRequest;
+  version = 1;
+  constructor({ dbName, version: version10, tableName, settingsKey }) {
+    if (!dbName && !tableName && !settingsKey) {
+      return;
+    }
+    this.version = version10;
+    this.dbName = dbName;
+    this.tableName = tableName;
+    this.settingsKey = settingsKey;
+    this.#createDatabase();
+    this.#upgradeNeeded();
+    this.#success();
+  }
+  #createDatabase() {
+    this.openRequest = indexedDB.open(this.dbName, this.version);
+  }
+  #upgradeNeeded() {
+    this.openRequest.onupgradeneeded = (e) => {
+      this.db = e.target.result;
+      this.db.createObjectStore(this.tableName, {
+        keyPath: this.settingsKey
+      });
+    };
+  }
+  #success() {
+    this.openRequest.onsuccess = (e) => {
+      this.db = e.target.result;
+    };
+  }
+  addItem(value) {
+    const tx = this.db.transaction(this.tableName, "readwrite");
+    const store = tx.objectStore(this.tableName);
+    store.put(value);
+  }
+  get(key, cb) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(this.tableName, "readonly");
+      const store = tx.objectStore(this.tableName);
+      const get3 = store.get(key);
+      get3.onsuccess = (e) => {
+        resolve(get3.result);
+      };
+    });
+  }
+};
+var safeGazeSettings = new SafeGazeDB({
+  dbName: "safeGaze",
+  version: 1,
+  tableName: "settings",
+  settingsKey: "settings"
+});
+var database_default = safeGazeSettings;
+
+// src/settings/background.js
+console.log("background.js");
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log("req", request);
+  if (request.type === "setSettings") {
+    database_default.addItem(request.payload);
+  }
+  if (request.type === "getSettings") {
+    database_default.get(request.settingsKey).then((data) => {
+      sendResponse(data.value);
+    });
+    return true;
+  }
+});
 
 // src/background/index.js
 queueManager_default.init();

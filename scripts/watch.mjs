@@ -4,6 +4,7 @@ let ctx = await esbuild.context({
   entryPoints: [
     './src/content/index.js',
     './src/background/index.js',
+    './src/settings/script.js',
   ],
   outdir: 'dist',
   bundle: true,

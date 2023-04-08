@@ -59,9 +59,9 @@ export default class DrawMask {
             for (let i = 0; i < data.length; i += 4) {
 
                 if (segmentPeople.data[i] !== 24) {
-                    data[i] = 111;     // red
-                    data[i + 1] = 134; // green
-                    data[i + 2] = 190; // blue
+                    data[i] = 255;     // red
+                    data[i + 1] = 255; // green
+                    data[i + 2] = 255; // blue
                     data[i + 3] = 255; // alpha
 
                 } else {
