@@ -10,23 +10,22 @@
   "action": {
     "default_popup": "settings/popup.html",
     "default_icon": {
-      "16": "images/safegaze-icon.png",
-      "32": "images/safegaze-icon.png",
-      "48": "images/safegaze-icon.png",
-      "128": "images/safegaze-icon.png"
+      "16": "logo/sg-logo-only.png",
+      "32": "logo/sg-logo-only.png",
+      "48": "logo/sg-logo-only.png",
+      "128": "logo/sg-logo-only.png"
     }
   },
   "icons": {
-    "16": "images/safegaze-icon.png",
-    "32": "images/safegaze-icon.png",
-    "48": "images/safegaze-icon.png",
-    "128": "images/safegaze-icon.png"
-  },
+    "16": "logo/sg-logo-only.png",
+    "32": "logo/sg-logo-only.png",
+    "48": "logo/sg-logo-only.png",
+    "128": "logo/sg-logo-only.png"
+},
   "permissions": [
     "storage",
     "tabs",
-    "activeTab",
-    "alarms"
+    "activeTab"
   ],
   "content_scripts": [
     {
