@@ -77759,9 +77759,9 @@ var DrawMask = class {
         continue;
       for (let i = 0; i < data.length; i += 4) {
         if (segmentPeople.data[i] !== 24) {
-          data[i] = 111;
-          data[i + 1] = 134;
-          data[i + 2] = 190;
+          data[i] = 255;
+          data[i + 1] = 255;
+          data[i + 2] = 255;
           data[i + 3] = 255;
         } else {
         }
@@ -78026,16 +78026,13 @@ var database_default = safeGazeSettings;
 // src/settings/background.js
 console.log("background.js");
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log(request.payload);
+  console.log("req", request);
   if (request.type === "setSettings") {
     database_default.addItem(request.payload);
-    database_default.get(request.settingskey).then((data) => {
-      console.log(data);
-    });
   }
   if (request.type === "getSettings") {
-    database_default.get(request.settingskey).then((data) => {
-      sendResponse(data);
+    database_default.get(request.settingsKey).then((data) => {
+      sendResponse(data.value);
     });
     return true;
   }

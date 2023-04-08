@@ -1,4 +1,6 @@
 {
+  "version": "1.0.0",
+  "description": "SafeGaze detects and masks potentially haram & sensitive contents in your browser.",
   "scripts": {
     "watch": "node scripts/watch.mjs",
     "build": "node scripts/build.mjs",

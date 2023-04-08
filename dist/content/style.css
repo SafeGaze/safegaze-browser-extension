@@ -1,17 +1,15 @@
-body img:not(.hvf-invalid-img),
-body image:not(.hvf-invalid-img) {
+body:not(.hvf-extension-power-off) img:not(.hvf-invalid-img),
+body:not(.hvf-extension-power-off) image:not(.hvf-invalid-img) {
   opacity: 0 !important;
 }
-body img.hvf-analyzed,
-/* body img.hvf-analyzing, */
-body img.hvf-invalid,
-body image.hvf-analyzed,
-/* body image.hvf-analyzing, */
-body img.hvf-ignored-image,
-body img.hvf-too-many-render,
-body image.hvf-too-many-render,
-body image.hvf-ignored-image,
-body image.hvf-invalid {
+body:not(.hvf-extension-power-off) img.hvf-analyzed,
+body:not(.hvf-extension-power-off) img.hvf-invalid,
+body:not(.hvf-extension-power-off) image.hvf-analyzed,
+body:not(.hvf-extension-power-off) img.hvf-ignored-image,
+body:not(.hvf-extension-power-off) img.hvf-too-many-render,
+body:not(.hvf-extension-power-off) image.hvf-too-many-render,
+body:not(.hvf-extension-power-off) image.hvf-ignored-image,
+body:not(.hvf-extension-power-off) image.hvf-invalid {
   opacity: 1 !important;
 }
 

@@ -1,14 +1,23 @@
 // src/settings/script.js
 var checkbox = document.getElementById("power");
+chrome.runtime.sendMessage(
+  {
+    type: "getSettings",
+    settingsKey: "power"
+  },
+  (result) => {
+    console.log(result);
+    checkbox.checked = result || false;
+  }
+);
 checkbox.addEventListener("change", (event) => {
   let checked = event.currentTarget.checked;
-  console.log("checked", checked);
   chrome.runtime.sendMessage(
     {
       type: "setSettings",
       payload: {
-        name: checked,
-        settings: "halalz-settings"
+        value: checked,
+        settings: "power"
       }
     },
     (result) => {

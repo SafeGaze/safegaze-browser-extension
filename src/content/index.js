@@ -20,7 +20,20 @@ const hvf = {
   },
 
   // Initialize the extension
-  init: function () {
+  init: async function () {
+
+    const power = await chrome.runtime.sendMessage(
+      {
+        type: "getSettings",
+        settingsKey: "power",
+      });
+
+    console.log(power);
+    if (!power) {
+      document.body.classList.add("hvf-extension-power-off");
+      return;
+    }
+
     // wait for the page to load
     window.addEventListener(
       "load",
