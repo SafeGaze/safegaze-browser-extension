@@ -1,4 +1,4 @@
-class HalalzDB {
+class SafeGazeDB {
   db;
   openRequest;
   version = 1;
@@ -55,11 +55,11 @@ class HalalzDB {
   }
 }
 
-const halalzSettings = new HalalzDB({
-  dbName: "halalz2",
+const safeGazeSettings = new SafeGazeDB({
+  dbName: "safeGaze",
   version: 1,
-  tableName: "halalzSettings",
+  tableName: "settings",
   settingsKey: "settings",
 });
 
-export { halalzSettings };
+export default safeGazeSettings;
