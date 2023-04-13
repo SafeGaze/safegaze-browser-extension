@@ -21,12 +21,10 @@ const hvf = {
 
   // Initialize the extension
   init: async function () {
-
-    const power = await chrome.runtime.sendMessage(
-      {
-        type: "getSettings",
-        settingsKey: "power",
-      });
+    const power = await chrome.runtime.sendMessage({
+      type: "getSettings",
+      settingsKey: "power",
+    });
 
     console.log(power);
     if (!power) {
@@ -169,7 +167,7 @@ const hvf = {
     // Get all media
     // currently supports images only
     let media = document.querySelectorAll(
-      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom):not(.hvf-ignored-image)"
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-dom-checked):not(.hvf-ignored-image)"
     );
 
     // remove unused loader
@@ -189,7 +187,7 @@ const hvf = {
         media[i].tagName !== "image" &&
         media[i].tagName !== "IMG"
       ) {
-        media[i].classList.add("hvf-invalid-dom");
+        media[i].classList.add("hvf-dom-checked");
       }
 
       // console.log('foo');
@@ -231,11 +229,14 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
-      // ignored svg and gif
+      // ignored svg and gif and logo
       if (
         this.getUrlExtension(url) == "svg" ||
         this.getUrlExtension(url) == "gif" ||
-        this.getUrlExtension(url) == "ico"
+        this.getUrlExtension(url) == "ico" ||
+        url.includes("logo") ||
+        (media[i].tagName === "IMG" &&
+          media[i].getAttribute("alt").includes("logo"))
       ) {
         media[i].classList.add("hvf-invalid-img");
         continue;

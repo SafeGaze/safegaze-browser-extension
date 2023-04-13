@@ -15,12 +15,10 @@ var hvf = {
   },
   // Initialize the extension
   init: async function() {
-    const power = await chrome.runtime.sendMessage(
-      {
-        type: "getSettings",
-        settingsKey: "power"
-      }
-    );
+    const power = await chrome.runtime.sendMessage({
+      type: "getSettings",
+      settingsKey: "power"
+    });
     console.log(power);
     if (!power) {
       document.body.classList.add("hvf-extension-power-off");
@@ -127,7 +125,7 @@ var hvf = {
   // Send media to the background script
   sendMedia: function() {
     let media = document.querySelectorAll(
-      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom):not(.hvf-ignored-image)"
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-dom-checked):not(.hvf-ignored-image)"
     );
     this.removeUnUsedLoader();
     for (let i = 0; i < media.length; i++) {
@@ -135,7 +133,7 @@ var hvf = {
       const backgroundImageUrl = backgroundImage.slice(5, -2);
       const hasBackgroundImage = backgroundImage?.startsWith("url(");
       if (!hasBackgroundImage && media[i].tagName !== "image" && media[i].tagName !== "IMG") {
-        media[i].classList.add("hvf-invalid-dom");
+        media[i].classList.add("hvf-dom-checked");
       }
       if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
         continue;
@@ -154,7 +152,7 @@ var hvf = {
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
       }
-      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico") {
+      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt").includes("logo")) {
         media[i].classList.add("hvf-invalid-img");
         continue;
       }
