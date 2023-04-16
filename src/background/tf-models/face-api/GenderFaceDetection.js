@@ -5,7 +5,8 @@ import * as faceapi from './face-api.esm-nobundle.js';
 
 export default class GenderFaceDetection {
 
-    modelPath = 'https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models';
+    // modelPath = 'https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models';
+    modelPath = '/model-files/face-api-models';
     minScore = 0.3; // minimum score
     maxResults = 20; // maximum number of results to return    
 

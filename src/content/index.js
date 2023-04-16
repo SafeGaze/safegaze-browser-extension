@@ -21,30 +21,29 @@ const hvf = {
 
   // Initialize the extension
   init: async function () {
+    const power = await chrome.runtime.sendMessage({
+      type: "getSettings",
+      settingsKey: "power",
+    });
 
-    const power = await chrome.runtime.sendMessage(
-      {
-        type: "getSettings",
-        settingsKey: "power",
-      });
-
-    console.log(power);
+    // console.log(power);
     if (!power) {
       document.body.classList.add("hvf-extension-power-off");
       return;
     }
 
+    // start the extension
+    setTimeout(() => {
+      document.body.classList.add("hvf-extension-loaded");
+      this.triggerScanning();
+      this.receiveMedia();
+    }, 1000);
+
     // wait for the page to load
     window.addEventListener(
       "load",
       () => {
-        document.body.classList.add("hvf-extension-loaded");
-        this.triggerScanning();
-        this.receiveMedia();
-
-        setTimeout(() => {
-          this.listenUrlUpdate();
-        }, 1000);
+        this.listenUrlUpdate();
       },
       false
     );
@@ -56,7 +55,7 @@ const hvf = {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
+      (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
     // console.log(result);
@@ -169,7 +168,7 @@ const hvf = {
     // Get all media
     // currently supports images only
     let media = document.querySelectorAll(
-      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-invalid-dom):not(.hvf-ignored-image)"
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-dom-checked):not(.hvf-ignored-image)"
     );
 
     // remove unused loader
@@ -189,7 +188,7 @@ const hvf = {
         media[i].tagName !== "image" &&
         media[i].tagName !== "IMG"
       ) {
-        media[i].classList.add("hvf-invalid-dom");
+        media[i].classList.add("hvf-dom-checked");
       }
 
       // console.log('foo');
@@ -231,11 +230,14 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
-      // ignored svg and gif
+      // ignored svg and gif and logo
       if (
         this.getUrlExtension(url) == "svg" ||
         this.getUrlExtension(url) == "gif" ||
-        this.getUrlExtension(url) == "ico"
+        this.getUrlExtension(url) == "ico" ||
+        url.includes("logo") ||
+        (media[i].tagName === "IMG" &&
+          media[i].getAttribute("alt")?.includes("logo"))
       ) {
         media[i].classList.add("hvf-invalid-img");
         continue;
@@ -271,8 +273,8 @@ const hvf = {
           mediaUrl: url,
           mediaType:
             hasBackgroundImage &&
-            media[i].tagName !== "IMG" &&
-            media[i].tagName !== "image"
+              media[i].tagName !== "IMG" &&
+              media[i].tagName !== "image"
               ? "backgroundImage"
               : "image",
           baseObject: {

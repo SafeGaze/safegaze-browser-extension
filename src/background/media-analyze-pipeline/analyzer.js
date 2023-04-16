@@ -105,7 +105,8 @@ class analyzer {
         // ]);
 
         const people = await this.bodySegmenter.segment(imageData);
-        const selfie = await this.selfieSegmenter.segment(imageData);
+        const selfie = null;
+        // const selfie = await this.selfieSegmenter.segment(imageData);
         // const genderFaceData = await this.genderFaceDetection.detect(this.frameCanvas);
 
         const drawMask = new DrawMask();

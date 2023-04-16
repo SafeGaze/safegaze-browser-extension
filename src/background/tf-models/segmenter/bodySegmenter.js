@@ -6,13 +6,15 @@ export default class Segmenter {
         architecture: 'ResNet50',
         outputStride: 32,
         quantBytes: 2,
+        // modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/resnet50/quant2/model-stride32.json",
+        modelUrl: "/model-files/resnet50/quant2/model-stride32.json"
     };
 
     bodySegmentationConfig = {
         multiSegmentation: true,
         segmentBodyParts: true,
         internalResolution: 'high',
-        segmentationThreshold: 0.30
+        segmentationThreshold: 0.20
     };
 
     load = async () => {

@@ -76446,7 +76446,8 @@ function mr(o, t = new z()) {
 
 // src/background/tf-models/face-api/GenderFaceDetection.js
 var GenderFaceDetection = class {
-  modelPath = "https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models";
+  // modelPath = 'https://safegaze.sgp1.cdn.digitaloceanspaces.com/face-api-models';
+  modelPath = "/model-files/face-api-models";
   minScore = 0.3;
   // minimum score
   maxResults = 20;
@@ -77660,13 +77661,15 @@ var Segmenter = class {
   bodySegmenterConfig = {
     architecture: "ResNet50",
     outputStride: 32,
-    quantBytes: 2
+    quantBytes: 2,
+    // modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/resnet50/quant2/model-stride32.json",
+    modelUrl: "/model-files/resnet50/quant2/model-stride32.json"
   };
   bodySegmentationConfig = {
     multiSegmentation: true,
     segmentBodyParts: true,
     internalResolution: "high",
-    segmentationThreshold: 0.3
+    segmentationThreshold: 0.2
   };
   load = async () => {
     const bodyPixModel = Se2.BodyPix;
@@ -77759,8 +77762,8 @@ var DrawMask = class {
         continue;
       for (let i = 0; i < data.length; i += 4) {
         if (segmentPeople.data[i] !== 24) {
-          data[i] = 255;
-          data[i + 1] = 255;
+          data[i] = 50;
+          data[i + 1] = 50;
           data[i + 2] = 255;
           data[i + 3] = 255;
         } else {
@@ -77855,7 +77858,7 @@ var analyzer = class {
       };
     }
     const people = await this.bodySegmenter.segment(imageData);
-    const selfie = await this.selfieSegmenter.segment(imageData);
+    const selfie = null;
     const drawMask = new DrawMask();
     let shouldMask = false;
     try {
