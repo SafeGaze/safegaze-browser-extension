@@ -1,4 +1,9 @@
 // src/settings/script.js
+var reloadBtn = document.getElementById("reload-window");
+reloadBtn.addEventListener("click", () => {
+  chrome.tabs.reload();
+  reloadBtn.classList.add("hide");
+});
 var checkbox = document.getElementById("power");
 chrome.runtime.sendMessage(
   {
@@ -12,6 +17,7 @@ chrome.runtime.sendMessage(
 );
 checkbox.addEventListener("change", (event) => {
   let checked = event.currentTarget.checked;
+  reloadBtn.classList.remove("hide");
   chrome.runtime.sendMessage(
     {
       type: "setSettings",

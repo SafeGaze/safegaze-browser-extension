@@ -19,20 +19,19 @@ var hvf = {
       type: "getSettings",
       settingsKey: "power"
     });
-    console.log(power);
     if (!power) {
       document.body.classList.add("hvf-extension-power-off");
       return;
     }
+    setTimeout(() => {
+      document.body.classList.add("hvf-extension-loaded");
+      this.triggerScanning();
+      this.receiveMedia();
+    }, 1e3);
     window.addEventListener(
       "load",
       () => {
-        document.body.classList.add("hvf-extension-loaded");
-        this.triggerScanning();
-        this.receiveMedia();
-        setTimeout(() => {
-          this.listenUrlUpdate();
-        }, 1e3);
+        this.listenUrlUpdate();
       },
       false
     );
@@ -152,7 +151,7 @@ var hvf = {
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
       }
-      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt").includes("logo")) {
+      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt")?.includes("logo")) {
         media[i].classList.add("hvf-invalid-img");
         continue;
       }

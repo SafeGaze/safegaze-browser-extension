@@ -1,5 +1,13 @@
-const checkbox = document.getElementById('power');
+// on click #reload-btn
+const reloadBtn = document.getElementById('reload-window');
+reloadBtn.addEventListener('click', () => {
+  chrome.tabs.reload();
+    // add class 'hide' to reload btn.
+    reloadBtn.classList.add('hide');
+});
 
+
+const checkbox = document.getElementById('power');
 
 chrome.runtime.sendMessage(
   {
@@ -14,6 +22,9 @@ chrome.runtime.sendMessage(
 
 checkbox.addEventListener('change', (event) => {
   let checked = event.currentTarget.checked;
+
+  // show the reload btn
+  reloadBtn.classList.remove('hide');
 
   chrome.runtime.sendMessage(
     {
