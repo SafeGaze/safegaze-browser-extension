@@ -1,17 +1,27 @@
 
 export default class DrawMask {
-
-    constructor() {
-
+    maskRgb = {
+        r: 0,
+        g: 134,
+        b: 190,
     }
+
+    // constructor() {
+
+
+    // }
 
     draw = async (ctx, imageData, genderData, segmentationData, selfieData) => {
         if (segmentationData === null) return;
         if (genderData === null) genderData = [];
+        // if (selfieData === null) selfieData = [];
 
-        // console.log(selfieData);
-        // segmentationData.push(selfieData);
+        console.log({genderData, segmentationData, selfieData});
+        if(selfieData.length > 0){
+            segmentationData = segmentationData.concat(selfieData);
+        }
 
+        // console.log(segmentationData);
         if(segmentationData.length <= 0){
             return false;
         }
@@ -22,7 +32,11 @@ export default class DrawMask {
         for await (const single of segmentationData) {
             let n = 0;
             let segmentPeople = single.mask;
+            let maskRData = (segmentPeople?.mask?.dtype === 'float32') ? 0 : 24;
+                
             segmentPeople = await segmentPeople.toImageData();
+
+            // console.log(segmentPeople);
 
             // check if the gender boxed area is in the mask area.
             // if it is, then we will not draw the mask.
@@ -46,7 +60,7 @@ export default class DrawMask {
                     }
                 );
 
-                if (segmentPeople.data[imageDataIndexFromBox] !== 24 ) {
+                if (segmentPeople.data[imageDataIndexFromBox] !== maskRData ) {
                     console.log('male found; skip masking');
                     skipMasking = true;
                     continue;
@@ -58,10 +72,10 @@ export default class DrawMask {
 
             for (let i = 0; i < data.length; i += 4) {
 
-                if (segmentPeople.data[i] !== 24) {
-                    data[i] = 50;     // red
-                    data[i + 1] = 50; // green
-                    data[i + 2] = 255; // blue
+                if (segmentPeople.data[i] !== maskRData) {
+                    data[i] = this.maskRgb.r;     // red
+                    data[i + 1] = this.maskRgb.g; // green
+                    data[i + 2] = this.maskRgb.b; // blue
                     data[i + 3] = 255; // alpha
 
                 } else {

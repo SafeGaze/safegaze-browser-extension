@@ -77656,20 +77656,20 @@ function ke2(t, e) {
   t.BodyPix = "BodyPix", t.MediaPipeSelfieSegmentation = "MediaPipeSelfieSegmentation";
 }(Se2 || (Se2 = {}));
 
-// src/background/tf-models/segmenter/bodySegmenter.js
-var Segmenter = class {
+// src/background/tf-models/segmenter/BodySegmenter.js
+var BodySegmenter = class {
   bodySegmenterConfig = {
-    architecture: "ResNet50",
-    outputStride: 32,
+    architecture: "MobileNetV1",
+    outputStride: 16,
     quantBytes: 2,
-    // modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/resnet50/quant2/model-stride32.json",
-    modelUrl: "/model-files/resnet50/quant2/model-stride32.json"
+    multiplier: 1,
+    modelUrl: "/model-files/mobilenet/float/100/model-stride16.json"
   };
   bodySegmentationConfig = {
     multiSegmentation: true,
     segmentBodyParts: true,
     internalResolution: "high",
-    segmentationThreshold: 0.2
+    segmentationThreshold: 0.25
   };
   load = async () => {
     const bodyPixModel = Se2.BodyPix;
@@ -77686,35 +77686,6 @@ var Segmenter = class {
         this.bodySegmentationConfig
       );
     } catch (error) {
-      console.log("Error body segmenting");
-      console.log(error);
-    }
-    return segmentation;
-  };
-};
-
-// src/background/tf-models/segmenter/selfieSegmenter.js
-var selfieSegmenter = class {
-  selfieSegmenterConfig = {
-    runtime: "tfjs",
-    // or 'tfjs'
-    solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation",
-    // or 'base/node_modules/@mediapipe/selfie_segmentation' in npm.
-    modelType: "general"
-  };
-  load = async () => {
-    const selfieModel = Se2.MediaPipeSelfieSegmentation;
-    this.selfieSegmenter = await ke2(selfieModel, this.selfieSegmenterConfig);
-  };
-  segment = async (canvas) => {
-    let segmentation = null;
-    try {
-      segmentation = await this.selfieSegmenter.segmentPeople(
-        canvas
-      );
-    } catch (error) {
-      console.log("Error selfie segmenting");
-      console.log(error);
     }
     return segmentation;
   };
@@ -77722,13 +77693,22 @@ var selfieSegmenter = class {
 
 // src/background/tf-models/mask/DrawMask.js
 var DrawMask = class {
-  constructor() {
-  }
+  maskRgb = {
+    r: 0,
+    g: 134,
+    b: 190
+  };
+  // constructor() {
+  // }
   draw = async (ctx, imageData, genderData, segmentationData, selfieData) => {
     if (segmentationData === null)
       return;
     if (genderData === null)
       genderData = [];
+    console.log({ genderData, segmentationData, selfieData });
+    if (selfieData.length > 0) {
+      segmentationData = segmentationData.concat(selfieData);
+    }
     if (segmentationData.length <= 0) {
       return false;
     }
@@ -77737,6 +77717,7 @@ var DrawMask = class {
     for await (const single of segmentationData) {
       let n2 = 0;
       let segmentPeople = single.mask;
+      let maskRData = segmentPeople?.mask?.dtype === "float32" ? 0 : 24;
       segmentPeople = await segmentPeople.toImageData();
       for (let g2 = 0; g2 < genderData.length; g2++) {
         if (genderData[g2].detection._score < 0.5)
@@ -77752,7 +77733,7 @@ var DrawMask = class {
             height: segmentPeople.height
           }
         );
-        if (segmentPeople.data[imageDataIndexFromBox] !== 24) {
+        if (segmentPeople.data[imageDataIndexFromBox] !== maskRData) {
           console.log("male found; skip masking");
           skipMasking = true;
           continue;
@@ -77761,10 +77742,10 @@ var DrawMask = class {
       if (skipMasking === true)
         continue;
       for (let i = 0; i < data.length; i += 4) {
-        if (segmentPeople.data[i] !== 24) {
-          data[i] = 50;
-          data[i + 1] = 50;
-          data[i + 2] = 255;
+        if (segmentPeople.data[i] !== maskRData) {
+          data[i] = this.maskRgb.r;
+          data[i + 1] = this.maskRgb.g;
+          data[i + 2] = this.maskRgb.b;
           data[i + 3] = 255;
         } else {
         }
@@ -77803,10 +77784,8 @@ var analyzer = class {
     try {
       this.genderFaceDetection = new GenderFaceDetection();
       await this.genderFaceDetection.load();
-      this.bodySegmenter = new Segmenter();
+      this.bodySegmenter = new BodySegmenter();
       await this.bodySegmenter.load();
-      this.selfieSegmenter = new selfieSegmenter();
-      await this.selfieSegmenter.load();
       this.modelLoaded = true;
     } catch (error) {
       console.log("Error loading models");
@@ -77857,12 +77836,17 @@ var analyzer = class {
         invalidMedia: true
       };
     }
-    const people = await this.bodySegmenter.segment(imageData);
-    const selfie = null;
+    const [genderData, people, selfie] = await Promise.all([
+      // this.genderFaceDetection.detect(this.frameCanvas),
+      [],
+      this.bodySegmenter.segment(imageData),
+      []
+      // this.selfieSegmenter.segment(imageData)
+    ]);
     const drawMask = new DrawMask();
     let shouldMask = false;
     try {
-      shouldMask = await drawMask.draw(this.frameCtx, imageData, null, people, selfie);
+      shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
     } catch (error) {
       console.log("Error drawing mask");
       console.log(error);

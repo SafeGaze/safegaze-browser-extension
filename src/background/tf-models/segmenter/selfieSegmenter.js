@@ -1,18 +1,21 @@
 import * as bodySegmentation from '@tensorflow-models/body-segmentation';
 
-export default class selfieSegmenter {
+export default class SelfieSegmenter {
 
     selfieSegmenterConfig = {
-        runtime: 'tfjs', // or 'tfjs'
+        runtime: 'tfjs', // or 'mediapipe'
         solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation',
-        // or 'base/node_modules/@mediapipe/selfie_segmentation' in npm.
-        modelType: 'general'
+        // solutionPath: 'base/node_modules/@mediapipe/selfie_segmentation',
+        // modelType: 'general'
     }
 
     load = async () => {
         const selfieModel = bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation;
 
-        this.selfieSegmenter = await bodySegmentation.createSegmenter(selfieModel, this.selfieSegmenterConfig);
+        this.selfieSegmenter = await bodySegmentation.createSegmenter(
+            selfieModel, 
+            this.selfieSegmenterConfig
+        );
     }
 
     segment = async (canvas) => {
@@ -21,13 +24,12 @@ export default class selfieSegmenter {
 
         try {
             segmentation = await this.selfieSegmenter.segmentPeople(
-                canvas
+                canvas,
+                {flipHorizontal: false}
             );
         } catch (error) {
-            console.log("Error selfie segmenting");
-            console.log(error);
-        }
 
+        }
 
         return segmentation;
     }

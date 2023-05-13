@@ -1,7 +1,7 @@
 import * as tf from `@tensorflow/tfjs`;
 import GenderFaceDetection from '../tf-models/face-api/GenderFaceDetection.js';
-import bodySegmenter from '../tf-models/segmenter/bodySegmenter.js';
-import selfieSegmenter from '../tf-models/segmenter/selfieSegmenter.js';
+import BodySegmenter from '../tf-models/segmenter/BodySegmenter.js';
+import SelfieSegmenter from '../tf-models/segmenter/SelfieSegmenter.js';
 import DrawMask from '../tf-models/mask/DrawMask.js';
 class analyzer {
     constructor() {
@@ -24,17 +24,17 @@ class analyzer {
         await tf.ready();
 
         try {
-            // faceapi
             this.genderFaceDetection = new GenderFaceDetection();
             await this.genderFaceDetection.load();
-
+        
             // bodypix
-            this.bodySegmenter = new bodySegmenter();
+            this.bodySegmenter = new BodySegmenter();
             await this.bodySegmenter.load();
-
-            // selfie           
-            this.selfieSegmenter = new selfieSegmenter();
-            await this.selfieSegmenter.load();
+        
+            // selfie
+            // this.selfieSegmenter = new SelfieSegmenter();
+            // await this.selfieSegmenter.load();
+            
             this.modelLoaded = true;
         } catch (error) {
             console.log("Error loading models");
@@ -98,21 +98,19 @@ class analyzer {
             };
         }
 
-        // const [people, selfie] = await Promise.all([
-        //     // this.genderFaceDetection.detect(this.frameCanvas),
-        //     this.bodySegmenter.segment(imageData),
-        //     this.selfieSegmenter.segment(imageData)
-        // ]);
+        const [genderData, people, selfie] = await Promise.all([
+            // this.genderFaceDetection.detect(this.frameCanvas),
+            [],
+            this.bodySegmenter.segment(imageData),
+            []
+            // this.selfieSegmenter.segment(imageData)
+        ]);
 
-        const people = await this.bodySegmenter.segment(imageData);
-        const selfie = null;
-        // const selfie = await this.selfieSegmenter.segment(imageData);
-        // const genderFaceData = await this.genderFaceDetection.detect(this.frameCanvas);
-
+        
         const drawMask = new DrawMask();
         let shouldMask = false;
         try {
-            shouldMask = await drawMask.draw(this.frameCtx, imageData, null, people, selfie);
+            shouldMask = await drawMask.draw(this.frameCtx, imageData, genderData, people, selfie);
         } catch (error) {
             console.log('Error drawing mask');
             console.log(error);
