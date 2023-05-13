@@ -1,20 +1,20 @@
 import * as bodySegmentation from '@tensorflow-models/body-segmentation';
 
-export default class Segmenter {
+export default class BodySegmenter {
 
     bodySegmenterConfig = {
-        architecture: 'ResNet50',
-        outputStride: 32,
+        architecture: 'MobileNetV1',
+        outputStride: 16,
         quantBytes: 2,
-        // modelUrl: "https://storage.googleapis.com/tfjs-models/savedmodel/bodypix/resnet50/quant2/model-stride32.json",
-        modelUrl: "/model-files/resnet50/quant2/model-stride32.json"
+        multiplier: 1,
+        modelUrl: "/model-files/mobilenet/float/100/model-stride16.json"
     };
 
     bodySegmentationConfig = {
         multiSegmentation: true,
         segmentBodyParts: true,
         internalResolution: 'high',
-        segmentationThreshold: 0.20
+        segmentationThreshold: 0.25
     };
 
     load = async () => {
@@ -35,8 +35,7 @@ export default class Segmenter {
                 this.bodySegmentationConfig
             );    
         } catch (error) {
-            console.log("Error body segmenting");
-            console.log(error);
+            
         }
 
 

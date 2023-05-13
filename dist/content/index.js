@@ -209,6 +209,7 @@ var hvf = {
             media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
           } else {
             media.setAttribute(srcAttr, message.payload.maskedUrl);
+            media.removeAttribute("srcset");
           }
           media.setAttribute("data-hvf-original-url", originalUrl);
         }
