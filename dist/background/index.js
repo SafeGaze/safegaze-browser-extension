@@ -1,4 +1,4 @@
-// src/background/media-analyze-pipeline/remoteAnalyzer.js
+// src/background/media-processor/remoteAnalyzer.js
 var remoteAnalyzer = class {
   constructor(data) {
     this.data = data;
@@ -100,7 +100,7 @@ var remoteAnalyzer = class {
 };
 var remoteAnalyzer_default = remoteAnalyzer;
 
-// src/background/media-analyze-pipeline/queueManager.js
+// src/background/media-processor/runtimeEvents.js
 var queueManager = {
   isAnalyzing: false,
   dataQueue: [],
@@ -156,10 +156,9 @@ var queueManager = {
       return;
     }
     let analyzer = new remoteAnalyzer_default(data);
-    let result = null;
-    analyzer.analyze().then((res) => {
+    analyzer.analyze().then((result) => {
       console.log("Media analysis complete");
-      console.log(res);
+      console.log(result);
       chrome.tabs.sendMessage(
         data.tabID,
         {
@@ -180,9 +179,9 @@ var queueManager = {
     });
   }
 };
-var queueManager_default = queueManager;
+queueManager.init();
 
-// src/settings/database.js
+// src/background/settings/database.js
 var SafeGazeDB = class {
   db;
   openRequest;
@@ -239,7 +238,7 @@ var safeGazeSettings = new SafeGazeDB({
 });
 var database_default = safeGazeSettings;
 
-// src/settings/background.js
+// src/background/settings/runtimeEvents.js
 console.log("background.js");
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("req", request);
@@ -253,6 +252,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
-
-// src/background/index.js
-queueManager_default.init();

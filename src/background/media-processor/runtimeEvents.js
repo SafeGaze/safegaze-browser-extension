@@ -1,4 +1,4 @@
-import analyzerClass from "./remoteAnalyzer.js";
+import remoteAnalyzer from "./remoteAnalyzer.js";
 
 const queueManager = {
 
@@ -84,12 +84,11 @@ const queueManager = {
             return;
         }
 
-        let analyzer = new analyzerClass(data);
-        let result = null;
+        let analyzer = new remoteAnalyzer(data);
 
-        analyzer.analyze().then((res) => {
+        analyzer.analyze().then((result) => {
             console.log("Media analysis complete");
-            console.log(res);
+            console.log(result);
 
             chrome.tabs.sendMessage(data.tabID,
                 {
@@ -113,4 +112,4 @@ const queueManager = {
     }
 }
 
-export default queueManager;
+queueManager.init();

@@ -72,6 +72,9 @@ var hvf = {
     });
   },
   addImageLoader(media) {
+    if (media.classList.contains("hvf-multi-time-analyzing") || media.classList.contains("hvf-invalid")) {
+      return;
+    }
     const hvgLoader = document.querySelector(
       ".hvf-loader-id-" + this.domObjectIndex
     );
@@ -156,7 +159,8 @@ var hvf = {
         media[i].classList.remove("hvf-analyzing");
         continue;
       }
-      if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt")?.includes("logo")) {
+      if (this.getUrlExtension(url) == "svg" || // this.getUrlExtension(url) == "gif" ||
+      this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt")?.includes("logo")) {
         media[i].classList.add("hvf-invalid-img");
         continue;
       }
@@ -261,6 +265,7 @@ var hvf = {
           mutation.target.classList.remove("hvf-analyzed");
           mutation.target.classList.remove("hvf-analyzing");
           mutation.target.classList.remove("hvf-invalid");
+          mutation.target.classList.add("hvf-multi-time-analyzing");
           this.triggerScanning();
         }
       }

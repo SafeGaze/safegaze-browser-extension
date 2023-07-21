@@ -99,6 +99,12 @@ const hvf = {
   },
 
   addImageLoader(media) {
+    if(
+      media.classList.contains('hvf-multi-time-analyzing') || 
+      media.classList.contains('hvf-invalid')
+      ) {
+      return;
+    }
     const hvgLoader = document.querySelector(
       ".hvf-loader-id-" + this.domObjectIndex
     );
@@ -239,7 +245,7 @@ const hvf = {
       // ignored svg and gif and logo
       if (
         this.getUrlExtension(url) == "svg" ||
-        this.getUrlExtension(url) == "gif" ||
+        // this.getUrlExtension(url) == "gif" ||
         this.getUrlExtension(url) == "ico" ||
         url.includes("logo") ||
         (media[i].tagName === "IMG" &&
@@ -401,6 +407,7 @@ const hvf = {
           mutation.target.classList.remove("hvf-analyzed");
           mutation.target.classList.remove("hvf-analyzing");
           mutation.target.classList.remove("hvf-invalid");
+          mutation.target.classList.add("hvf-multi-time-analyzing");
           this.triggerScanning();
         }
       }
