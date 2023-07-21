@@ -1,18 +1,18 @@
-import analyzerClass from "./analyzer.js";
+import analyzerClass from "./remoteAnalyzer.js";
 
 const queueManager = {
 
     isAnalyzing: false,
     dataQueue: [],
     analyzer: null,
-    modelLoaded: false,
+    modelLoaded: true,
     overloadTimeout: null,
 
     init: async function () {
         this.listenRequest();
 
-        this.analyzer = new analyzerClass();
-        this.modelLoaded = await this.analyzer.init();
+        // this.analyzer = new analyzerClass();
+        // this.modelLoaded = await this.analyzer.init();
     },
 
     addToQueue: async function (data) {
@@ -56,7 +56,7 @@ const queueManager = {
         }
 
         // reset the overload timeout
-        this.overloadTimeout = 500;
+        this.overloadTimeout = 50;
 
         // wait 500ms to avoid overloading the browser
         await new Promise(r => setTimeout(r, this.overloadTimeout));
@@ -82,19 +82,20 @@ const queueManager = {
             // console.log({allTabIds, tabId: data.tabID});
 
             if(allTabIds.includes(data.tabID)){
-                console.log("tab is in current window", { tabId: data.tabID, allTabIds});
+                // console.log("tab is in current window", { tabId: data.tabID, allTabIds});
                 this.dataQueue.push(data);
             }
 
             // decrease the overload timeout
-            this.overloadTimeout = 300;
+            this.overloadTimeout = 0;
 
             // skip the analysis
             this.processQueue(); 
             return;
         }
 
-        let result = await this.analyzer.analyze(data);
+        let analyzer = new analyzerClass(data);
+        let result = await analyzer.analyze();
 
 
         if(result === null) {
