@@ -2,7 +2,7 @@ const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 2,
+  maxRenderItem: 3,
 
   ignoreImageSize: 40,
 
@@ -228,6 +228,14 @@ const hvf = {
       // If has background image then updating the url
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
+      }
+
+      if(url.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+
+        media[i].classList.add("hvf-analyzed");
+        media[i].classList.remove("hvf-analyzing");
+
+        continue;
       }
 
       // ignored svg and gif and logo

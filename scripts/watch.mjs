@@ -3,7 +3,7 @@ import * as esbuild from 'esbuild'
 let ctx = await esbuild.context({
   entryPoints: [
     './src/content/index.js',
-    './src/background/index.js',
+    './src/content/worker.js',
     './src/settings/script.js',
   ],
   outdir: 'dist',

@@ -2,7 +2,7 @@
 var hvf = {
   domObjectIndex: 0,
   interval: null,
-  maxRenderItem: 2,
+  maxRenderItem: 3,
   ignoreImageSize: 40,
   is_scrolling: function() {
     return this.lastScrollTime && (/* @__PURE__ */ new Date()).getTime() < this.lastScrollTime + 500;
@@ -150,6 +150,11 @@ var hvf = {
       }
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
+      }
+      if (url.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+        media[i].classList.add("hvf-analyzed");
+        media[i].classList.remove("hvf-analyzing");
+        continue;
       }
       if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt")?.includes("logo")) {
         media[i].classList.add("hvf-invalid-img");

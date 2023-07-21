@@ -3,10 +3,6 @@
   "name": "SafeGaze Browser Extension",
   "version": "1.0.0",
   "description": "SafeGaze detects and masks potentially haram & sensitive contents in your browser.",
-  "background": {
-    "service_worker": "background/index.js",
-    "type": "module"
-  },
   "action": {
     "default_popup": "settings/popup.html",
     "default_icon": {
