@@ -5,6 +5,12 @@ var remoteAnalyzer = class {
   }
   analyze = async () => {
     let annotatedData;
+    if (this.data.mediaUrl.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+      return {
+        shouldMask: true,
+        maskedUrl: this.data.mediaUrl
+      };
+    }
     try {
       let relativeFilePath = this.relativeFilePath(this.data.mediaUrl);
       if (await this.urlExists(relativeFilePath)) {

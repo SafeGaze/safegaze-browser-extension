@@ -172,12 +172,10 @@ var hvf = {
         let payload = {
           mediaUrl: url,
           mediaType: hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image" ? "backgroundImage" : "image",
-          baseObject: {
-            originalUrl: url,
-            domObjectIndex: this.domObjectIndex,
-            srcAttr,
-            shouldMask: false
-          }
+          domObjectIndex: this.domObjectIndex,
+          srcAttr,
+          shouldMask: false,
+          maskedUrl: null
         };
         chrome.runtime.sendMessage(
           {
@@ -197,10 +195,10 @@ var hvf = {
   receiveMedia: function() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
-        let index = message.payload.baseObject.domObjectIndex;
+        let index = message.payload.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
-        let srcAttr = message.payload.baseObject.srcAttr;
-        let originalUrl = message.payload.baseObject.originalUrl;
+        let srcAttr = message.payload.srcAttr;
+        let mediaUrl = message.payload.mediaUrl;
         if (!media)
           return;
         if (message.payload.shouldMask && message.payload.maskedUrl) {
@@ -211,7 +209,7 @@ var hvf = {
             media.setAttribute(srcAttr, message.payload.maskedUrl);
             media.removeAttribute("srcset");
           }
-          media.setAttribute("data-hvf-original-url", originalUrl);
+          media.setAttribute("data-hvf-original-url", mediaUrl);
         }
         if (message.payload.invalidMedia === true) {
           media.classList.add("hvf-invalid");

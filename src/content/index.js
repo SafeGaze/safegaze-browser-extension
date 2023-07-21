@@ -250,7 +250,7 @@ const hvf = {
         url &&
         url.length > 0
       ) {
-        // multiple render limit up to 5
+        // multiple render limit up to this.maxRenderItem
         let renderCycle = media[i].getAttribute("hvf-render-cycle");
 
         if (renderCycle && +renderCycle > this.maxRenderItem) {
@@ -277,12 +277,10 @@ const hvf = {
               media[i].tagName !== "image"
               ? "backgroundImage"
               : "image",
-          baseObject: {
-            originalUrl: url,
-            domObjectIndex: this.domObjectIndex,
-            srcAttr: srcAttr,
-            shouldMask: false,
-          },
+          domObjectIndex: this.domObjectIndex,
+          srcAttr: srcAttr,
+          shouldMask: false,
+          maskedUrl: null,
         };
 
         chrome.runtime.sendMessage(
@@ -306,13 +304,13 @@ const hvf = {
   receiveMedia: function () {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
-        let index = message.payload.baseObject.domObjectIndex;
+        let index = message.payload.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
 
         // console.log(message.payload);
 
-        let srcAttr = message.payload.baseObject.srcAttr;
-        let originalUrl = message.payload.baseObject.originalUrl;
+        let srcAttr = message.payload.srcAttr;
+        let mediaUrl = message.payload.mediaUrl;
 
         if (!media) return;
 
@@ -325,7 +323,7 @@ const hvf = {
             media.setAttribute(srcAttr, message.payload.maskedUrl);
             media.removeAttribute('srcset');
           }
-          media.setAttribute("data-hvf-original-url", originalUrl);
+          media.setAttribute("data-hvf-original-url", mediaUrl);
         }
 
         if (message.payload.invalidMedia === true) {
