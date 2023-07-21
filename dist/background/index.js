@@ -137,7 +137,7 @@ var queueManager = {
       this.isAnalyzing = false;
       return;
     }
-    this.overloadTimeout = 100;
+    this.overloadTimeout = 10;
     await new Promise((r) => setTimeout(r, this.overloadTimeout));
     this.isAnalyzing = true;
     let data = this.dataQueue.shift();
@@ -151,29 +151,33 @@ var queueManager = {
       if (allTabIds.includes(data.tabID)) {
         this.dataQueue.push(data);
       }
-      this.overloadTimeout = 50;
+      this.overloadTimeout = 10;
       this.processQueue();
       return;
     }
     let analyzer = new remoteAnalyzer_default(data);
-    let result = await analyzer.analyze();
-    if (result === null) {
-      this.processQueue();
-      return;
-    }
-    chrome.tabs.sendMessage(
-      data.tabID,
-      {
-        action: "HVF-MEDIA-ANALYSIS-REPORT",
-        payload: Object.assign(data, result)
-      },
-      (result2) => {
-        if (!chrome.runtime.lastError) {
-        } else {
+    let result = null;
+    analyzer.analyze().then((res) => {
+      console.log("Media analysis complete");
+      console.log(res);
+      chrome.tabs.sendMessage(
+        data.tabID,
+        {
+          action: "HVF-MEDIA-ANALYSIS-REPORT",
+          payload: Object.assign(data, result)
+        },
+        (result2) => {
+          if (!chrome.runtime.lastError) {
+          } else {
+          }
         }
-      }
-    );
-    this.processQueue();
+      );
+      this.processQueue();
+    }).catch((err) => {
+      console.log("Error analyzing media");
+      console.log(err);
+      this.processQueue();
+    });
   }
 };
 var queueManager_default = queueManager;

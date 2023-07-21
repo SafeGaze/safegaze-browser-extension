@@ -151,6 +151,11 @@ var hvf = {
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
       }
+      if (url.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+        media[i].classList.add("hvf-analyzed");
+        media[i].classList.remove("hvf-analyzing");
+        continue;
+      }
       if (this.getUrlExtension(url) == "svg" || this.getUrlExtension(url) == "gif" || this.getUrlExtension(url) == "ico" || url.includes("logo") || media[i].tagName === "IMG" && media[i].getAttribute("alt")?.includes("logo")) {
         media[i].classList.add("hvf-invalid-img");
         continue;

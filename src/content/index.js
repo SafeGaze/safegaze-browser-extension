@@ -230,6 +230,12 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
+      if (url.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+        media[i].classList.add("hvf-analyzed");
+        media[i].classList.remove("hvf-analyzing");
+        continue;
+      }
+
       // ignored svg and gif and logo
       if (
         this.getUrlExtension(url) == "svg" ||

@@ -46,7 +46,7 @@ const queueManager = {
         }
 
         // reset the overload timeout
-        this.overloadTimeout = 100;
+        this.overloadTimeout = 10;
 
         // wait 500ms to avoid overloading the browser
         await new Promise(r => setTimeout(r, this.overloadTimeout));
@@ -77,7 +77,7 @@ const queueManager = {
             }
 
             // decrease the overload timeout
-            this.overloadTimeout = 50;
+            this.overloadTimeout = 10;
 
             // skip the analysis
             this.processQueue(); 
@@ -85,28 +85,31 @@ const queueManager = {
         }
 
         let analyzer = new analyzerClass(data);
-        let result = await analyzer.analyze();
+        let result = null;
 
+        analyzer.analyze().then((res) => {
+            console.log("Media analysis complete");
+            console.log(res);
 
-        if(result === null) {
-            this.processQueue();
-            return;
-        }
-
-        chrome.tabs.sendMessage(data.tabID,
-            {
-                action: "HVF-MEDIA-ANALYSIS-REPORT",
-                payload: Object.assign(data, result)
-            }, (result) => {
-                if (!chrome.runtime.lastError) {
-                    // message processing code goes here
-                } else {
-                    // error handling code goes here
+            chrome.tabs.sendMessage(data.tabID,
+                {
+                    action: "HVF-MEDIA-ANALYSIS-REPORT",
+                    payload: Object.assign(data, result)
+                }, (result) => {
+                    if (!chrome.runtime.lastError) {
+                        // message processing code goes here
+                    } else {
+                        // error handling code goes here
+                    }
                 }
-            }
-        );
-
-        this.processQueue();
+            );
+    
+            this.processQueue();
+        }).catch((err) => {
+            console.log("Error analyzing media");
+            console.log(err);
+            this.processQueue();
+        });
     }
 }
 
