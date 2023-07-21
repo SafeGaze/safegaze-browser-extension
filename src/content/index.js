@@ -2,7 +2,7 @@ const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 5,
+  maxRenderItem: 2,
 
   ignoreImageSize: 40,
 
@@ -321,6 +321,7 @@ const hvf = {
           if (message.payload.mediaType === "backgroundImage") {
             media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
           } else {
+            // media.setAttribute(srcAttr, this.blankThumbnail());
             media.setAttribute(srcAttr, message.payload.maskedUrl);
             media.removeAttribute('srcset');
           }
@@ -435,6 +436,10 @@ const hvf = {
       true
     );
   },
+
+  blankThumbnail: function () {
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKjAQAAAAAlyMttAAABpUlEQVR42u3OMQEAAAwCIPuX1hjbAQlIX4qWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpbWmQEz1g2V4P8ycgAAAABJRU5ErkJggg==";
+  }
 };
 
 hvf.init();

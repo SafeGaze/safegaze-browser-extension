@@ -99,7 +99,6 @@ var queueManager = {
   isAnalyzing: false,
   dataQueue: [],
   analyzer: null,
-  modelLoaded: true,
   overloadTimeout: null,
   init: async function() {
     this.listenRequest();
@@ -132,12 +131,7 @@ var queueManager = {
       this.isAnalyzing = false;
       return;
     }
-    if (!this.modelLoaded) {
-      await new Promise((r) => setTimeout(r, 2e3));
-      this.processQueue();
-      return;
-    }
-    this.overloadTimeout = 50;
+    this.overloadTimeout = 100;
     await new Promise((r) => setTimeout(r, this.overloadTimeout));
     this.isAnalyzing = true;
     let data = this.dataQueue.shift();
@@ -151,7 +145,7 @@ var queueManager = {
       if (allTabIds.includes(data.tabID)) {
         this.dataQueue.push(data);
       }
-      this.overloadTimeout = 0;
+      this.overloadTimeout = 50;
       this.processQueue();
       return;
     }

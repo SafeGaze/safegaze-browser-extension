@@ -5,14 +5,10 @@ const queueManager = {
     isAnalyzing: false,
     dataQueue: [],
     analyzer: null,
-    modelLoaded: true,
     overloadTimeout: null,
 
     init: async function () {
         this.listenRequest();
-
-        // this.analyzer = new analyzerClass();
-        // this.modelLoaded = await this.analyzer.init();
     },
 
     addToQueue: async function (data) {
@@ -49,14 +45,8 @@ const queueManager = {
             return;
         }
 
-        if(!this.modelLoaded) {
-            await new Promise(r => setTimeout(r, 2000));
-            this.processQueue();
-            return;
-        }
-
         // reset the overload timeout
-        this.overloadTimeout = 50;
+        this.overloadTimeout = 100;
 
         // wait 500ms to avoid overloading the browser
         await new Promise(r => setTimeout(r, this.overloadTimeout));
@@ -87,7 +77,7 @@ const queueManager = {
             }
 
             // decrease the overload timeout
-            this.overloadTimeout = 0;
+            this.overloadTimeout = 50;
 
             // skip the analysis
             this.processQueue(); 
