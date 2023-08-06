@@ -2,7 +2,7 @@ const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 2,
+  maxRenderItem: 0,
 
   ignoreImageSize: 40,
 
@@ -55,7 +55,7 @@ const hvf = {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight) &&
+        (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
     // console.log(result);
@@ -99,10 +99,10 @@ const hvf = {
   },
 
   addImageLoader(media) {
-    if(
-      media.classList.contains('hvf-multi-time-analyzing') || 
-      media.classList.contains('hvf-invalid')
-      ) {
+    if (
+      media.classList.contains("hvf-multi-time-analyzing") ||
+      media.classList.contains("hvf-invalid")
+    ) {
       return;
     }
     const hvgLoader = document.querySelector(
@@ -236,7 +236,11 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
-      if (url.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+      if (
+        url.startsWith(
+          "https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/"
+        )
+      ) {
         media[i].classList.add("hvf-analyzed");
         media[i].classList.remove("hvf-analyzing");
         continue;
@@ -285,8 +289,8 @@ const hvf = {
           mediaUrl: url,
           mediaType:
             hasBackgroundImage &&
-              media[i].tagName !== "IMG" &&
-              media[i].tagName !== "image"
+            media[i].tagName !== "IMG" &&
+            media[i].tagName !== "image"
               ? "backgroundImage"
               : "image",
           domObjectIndex: this.domObjectIndex,
@@ -327,13 +331,17 @@ const hvf = {
         if (!media) return;
 
         if (message.payload.shouldMask && message.payload.maskedUrl) {
+          // reset the image before replacing the masked url
+          media.setAttribute(srcAttr, "");
+          media.style.backgroundImage = "";
+
           media.classList.add("hvf-masked");
           if (message.payload.mediaType === "backgroundImage") {
             media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
           } else {
             // media.setAttribute(srcAttr, this.blankThumbnail());
             media.setAttribute(srcAttr, message.payload.maskedUrl);
-            media.removeAttribute('srcset');
+            media.removeAttribute("srcset");
           }
           media.setAttribute("data-hvf-original-url", mediaUrl);
         }
@@ -450,7 +458,7 @@ const hvf = {
 
   blankThumbnail: function () {
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKjAQAAAAAlyMttAAABpUlEQVR42u3OMQEAAAwCIPuX1hjbAQlIX4qWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpbWmQEz1g2V4P8ycgAAAABJRU5ErkJggg==";
-  }
+  },
 };
 
 hvf.init();

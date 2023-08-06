@@ -13,6 +13,11 @@ body:not(.hvf-extension-power-off) image.hvf-invalid {
   opacity: 1 !important;
 }
 
+body:not(.hvf-extension-power-off) image.hvf-invalid,
+body:not(.hvf-extension-power-off) img.hvf-invalid {
+  filter: blur(15px);
+}
+
 .hvf-loader.hvf-analyzed-loader-el {
   display: none;
 }
