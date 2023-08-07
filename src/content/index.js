@@ -2,7 +2,7 @@ const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 0,
+  maxRenderItem: 2,
 
   ignoreImageSize: 40,
 

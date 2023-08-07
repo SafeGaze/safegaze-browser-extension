@@ -2,7 +2,7 @@
 var hvf = {
   domObjectIndex: 0,
   interval: null,
-  maxRenderItem: 0,
+  maxRenderItem: 2,
   ignoreImageSize: 40,
   is_scrolling: function() {
     return this.lastScrollTime && (/* @__PURE__ */ new Date()).getTime() < this.lastScrollTime + 500;
