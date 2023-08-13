@@ -5,7 +5,9 @@ var remoteAnalyzer = class {
   }
   analyze = async () => {
     let annotatedData;
-    if (this.data.mediaUrl.startsWith("https://api.safegaze.com/media/annotated_image/")) {
+    if (this.data.mediaUrl.startsWith(
+      "https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/"
+    )) {
       return {
         shouldMask: true,
         maskedUrl: this.data.mediaUrl
@@ -51,11 +53,11 @@ var remoteAnalyzer = class {
     let myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     let raw = JSON.stringify({
-      "media": [
+      media: [
         {
-          "media_url": url,
-          "media_type": "image",
-          "has_attachment": false
+          media_url: url,
+          media_type: "image",
+          has_attachment: false
         }
       ]
     });
@@ -65,8 +67,23 @@ var remoteAnalyzer = class {
       body: raw,
       redirect: "follow"
     };
-    let response = await fetch("https://api.safegaze.com/api/v1/analyze", requestOptions);
+    let response = await fetch(
+      "https://api.safegaze.com/api/v1/analyze",
+      requestOptions
+    );
     let result = await response.json();
+    console.log({
+      request: {
+        media: [
+          {
+            media_url: url,
+            media_type: "image",
+            has_attachment: false
+          }
+        ]
+      },
+      response: result
+    });
     return result;
   };
   urlExists = async (url) => {
@@ -95,7 +112,7 @@ var remoteAnalyzer = class {
       filename = filenameParts[0].length ? filenameParts[0] : "image";
       extension = "jpg";
     }
-    return `https://api.safegaze.com/media/annotated_image/${relativeFolder}/${filename}.${extension}`;
+    return `https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/${relativeFolder}/${filename}.${extension}`;
   };
 };
 var remoteAnalyzer_default = remoteAnalyzer;
