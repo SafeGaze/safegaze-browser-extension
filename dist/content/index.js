@@ -1,4 +1,5 @@
 // src/content/index.js
+var hvfIsInitializing = false;
 var hvf = {
   domObjectIndex: 0,
   interval: null,
@@ -22,11 +23,17 @@ var hvf = {
   },
   // Initialize the extension
   init: async function() {
+    if (hvfIsInitializing === true) {
+      return;
+    }
     try {
+      hvfIsInitializing = true;
+      console.log("init function called");
       const power = await chrome.runtime.sendMessage({
         type: "getSettings",
         settingsKey: "power"
       });
+      hvfIsInitializing = false;
       if (!power) {
         document.body.classList.add("hvf-extension-power-off");
         return;
@@ -166,9 +173,7 @@ var hvf = {
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
       }
-      if (url.startsWith(
-        "https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/"
-      )) {
+      if (url.startsWith("https://cdn.safegaze.com/annotated_image/")) {
         media[i].classList.add("hvf-analyzed");
         media[i].classList.remove("hvf-analyzing");
         continue;
@@ -315,4 +320,15 @@ var hvf = {
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKjAQAAAAAlyMttAAABpUlEQVR42u3OMQEAAAwCIPuX1hjbAQlIX4qWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpbWmQEz1g2V4P8ycgAAAABJRU5ErkJggg==";
   }
 };
-hvf.init();
+function hvfInitObserver(callback) {
+  const config = { childList: true, subtree: true, attributes: true };
+  const observer = new MutationObserver(callback);
+  observer.observe(document.body, config);
+}
+function hvgObserverCallback() {
+  if (!document.querySelector("body").classList.contains("hvf-extension-loaded") && !document.querySelector("body").classList.contains("hvf-extension-power-off")) {
+    hvf.init();
+  }
+}
+hvfInitObserver(hvgObserverCallback);
+hvgObserverCallback();

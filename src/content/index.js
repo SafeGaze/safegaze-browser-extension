@@ -1,3 +1,5 @@
+let hvfIsInitializing = false;
+
 const hvf = {
   domObjectIndex: 0,
   interval: null,
@@ -31,11 +33,19 @@ const hvf = {
 
   // Initialize the extension
   init: async function () {
+    if (hvfIsInitializing === true) {
+      return;
+    }
     try {
+      hvfIsInitializing = true;
+
+      console.log("init function called");
+
       const power = await chrome.runtime.sendMessage({
         type: "getSettings",
         settingsKey: "power",
       });
+      hvfIsInitializing = false;
 
       // console.log(power);
       if (!power) {
@@ -252,11 +262,7 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
-      if (
-        url.startsWith(
-          "https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/"
-        )
-      ) {
+      if (url.startsWith("https://cdn.safegaze.com/annotated_image/")) {
         media[i].classList.add("hvf-analyzed");
         media[i].classList.remove("hvf-analyzing");
         continue;
@@ -488,4 +494,26 @@ const hvf = {
   },
 };
 
-hvf.init();
+function hvfInitObserver(callback) {
+  const config = { childList: true, subtree: true, attributes: true };
+
+  const observer = new MutationObserver(callback);
+
+  observer.observe(document.body, config);
+}
+
+function hvgObserverCallback() {
+  if (
+    !document
+      .querySelector("body")
+      .classList.contains("hvf-extension-loaded") &&
+    !document
+      .querySelector("body")
+      .classList.contains("hvf-extension-power-off")
+  ) {
+    hvf.init();
+  }
+}
+
+hvfInitObserver(hvgObserverCallback);
+hvgObserverCallback();

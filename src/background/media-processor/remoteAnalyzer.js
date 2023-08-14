@@ -7,9 +7,7 @@ class remoteAnalyzer {
     let annotatedData;
 
     if (
-      this.data.mediaUrl.startsWith(
-        "https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/"
-      )
+      this.data.mediaUrl.startsWith("https://cdn.safegaze.com/annotated_image/")
     ) {
       return {
         shouldMask: true,
@@ -150,7 +148,7 @@ class remoteAnalyzer {
       extension = "jpg";
     }
 
-    return `https://safegazecdn.s3.ap-southeast-1.amazonaws.com/annotated_image/${relativeFolder}/${filename}.${extension}`;
+    return `https://cdn.safegaze.com/annotated_image/${relativeFolder}/${filename}.${extension}`;
   };
 }
 
