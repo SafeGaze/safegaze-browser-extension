@@ -1,8 +1,10 @@
+let hvfIsInitializing = false;
+
 const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 5,
+  maxRenderItem: 3,
 
   ignoreImageSize: 40,
 
@@ -19,34 +21,58 @@ const hvf = {
     return url.split(/[#?]/)[0].split(".").pop().trim().toLowerCase();
   },
 
-  // Initialize the extension
-  init: async function () {
-    const power = await chrome.runtime.sendMessage({
-      type: "getSettings",
-      settingsKey: "power",
-    });
-
-    // console.log(power);
-    if (!power) {
-      document.body.classList.add("hvf-extension-power-off");
+  isDataSrcImage: function (imageSrc) {
+    if (!imageSrc) {
       return;
     }
+    // Regular expression for matching base64 encoded images
+    const regex = /^data:image\/([a-zA-Z]+);base64,/;
 
-    // start the extension
-    setTimeout(() => {
-      document.body.classList.add("hvf-extension-loaded");
-      this.triggerScanning();
-      this.receiveMedia();
-    }, 1000);
+    return regex.test(imageSrc);
+  },
 
-    // wait for the page to load
-    window.addEventListener(
-      "load",
-      () => {
-        this.listenUrlUpdate();
-      },
-      false
-    );
+  // Initialize the extension
+  init: async function () {
+    if (hvfIsInitializing === true) {
+      return;
+    }
+    try {
+      hvfIsInitializing = true;
+
+      console.log("init function called");
+
+      const power = await chrome.runtime.sendMessage({
+        type: "getSettings",
+        settingsKey: "power",
+      });
+      hvfIsInitializing = false;
+
+      // console.log(power);
+      if (!power) {
+        document.body.classList.add("hvf-extension-power-off");
+        return;
+      }
+
+      // start the extension
+      setTimeout(() => {
+        document.body.classList.add("hvf-extension-loaded");
+        this.triggerScanning();
+        this.receiveMedia();
+      }, 1000);
+
+      // wait for the page to load
+      window.addEventListener(
+        "load",
+        () => {
+          this.listenUrlUpdate();
+        },
+        false
+      );
+    } catch (error) {
+      console.log("initial load failed!");
+
+      document.body.classList.add("hvf-extension-power-off");
+    }
   },
 
   isElementInViewport: function (el) {
@@ -55,7 +81,7 @@ const hvf = {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-      (window.innerHeight || document.documentElement.clientHeight) &&
+        (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth);
 
     // console.log(result);
@@ -99,6 +125,12 @@ const hvf = {
   },
 
   addImageLoader(media) {
+    if (
+      media.classList.contains("hvf-multi-time-analyzing") ||
+      media.classList.contains("hvf-invalid")
+    ) {
+      return;
+    }
     const hvgLoader = document.querySelector(
       ".hvf-loader-id-" + this.domObjectIndex
     );
@@ -168,7 +200,7 @@ const hvf = {
     // Get all media
     // currently supports images only
     let media = document.querySelectorAll(
-      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-dom-checked):not(.hvf-ignored-image)"
+      "body *:not(.hvf-analyzed):not(.hvf-analyzing):not(.hvf-unidentified-error):not(.hvf-too-many-render):not(.hvf-dom-checked):not(.hvf-ignored-image):not(.hvf-can-not-processed)"
     );
 
     // remove unused loader
@@ -230,10 +262,16 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
+      if (url.startsWith("https://cdn.safegaze.com/annotated_image/")) {
+        media[i].classList.add("hvf-analyzed");
+        media[i].classList.remove("hvf-analyzing");
+        continue;
+      }
+
       // ignored svg and gif and logo
       if (
         this.getUrlExtension(url) == "svg" ||
-        this.getUrlExtension(url) == "gif" ||
+        // this.getUrlExtension(url) == "gif" ||
         this.getUrlExtension(url) == "ico" ||
         url.includes("logo") ||
         (media[i].tagName === "IMG" &&
@@ -250,18 +288,21 @@ const hvf = {
         url &&
         url.length > 0
       ) {
-        // multiple render limit up to 5
+        // multiple render limit up to this.maxRenderItem
         let renderCycle = media[i].getAttribute("hvf-render-cycle");
+        const loaderId = media[i].getAttribute("data-loader-id");
 
         if (renderCycle && +renderCycle > this.maxRenderItem) {
           media[i].classList.add("hvf-too-many-render");
           continue;
         }
+
         media[i].setAttribute("hvf-render-cycle", +renderCycle + 1 || 1);
 
         console.log("sending data to background script");
 
         this.domObjectIndex++;
+
         media[i].classList.remove("hvf-invalid");
         media[i].classList.add("hvf-analyzing");
         media[i].classList.add("hvf-dom-id-" + this.domObjectIndex);
@@ -269,20 +310,23 @@ const hvf = {
         // added image loader
         this.addImageLoader(media[i]);
 
+        const loader = document.querySelector(`.${loaderId}`);
+        if (loader) {
+          loader.classList.add("hvf-analyzed-loader-el");
+        }
+
         let payload = {
           mediaUrl: url,
           mediaType:
             hasBackgroundImage &&
-              media[i].tagName !== "IMG" &&
-              media[i].tagName !== "image"
+            media[i].tagName !== "IMG" &&
+            media[i].tagName !== "image"
               ? "backgroundImage"
               : "image",
-          baseObject: {
-            originalUrl: url,
-            domObjectIndex: this.domObjectIndex,
-            srcAttr: srcAttr,
-            shouldMask: false,
-          },
+          domObjectIndex: this.domObjectIndex,
+          srcAttr: srcAttr,
+          shouldMask: false,
+          maskedUrl: null,
         };
 
         chrome.runtime.sendMessage(
@@ -306,25 +350,30 @@ const hvf = {
   receiveMedia: function () {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message && message.action === "HVF-MEDIA-ANALYSIS-REPORT") {
-        let index = message.payload.baseObject.domObjectIndex;
+        let index = message.payload.domObjectIndex;
         let media = document.querySelector(".hvf-dom-id-" + index);
 
         // console.log(message.payload);
 
-        let srcAttr = message.payload.baseObject.srcAttr;
-        let originalUrl = message.payload.baseObject.originalUrl;
+        let srcAttr = message.payload.srcAttr;
+        let mediaUrl = message.payload.mediaUrl;
 
         if (!media) return;
 
         if (message.payload.shouldMask && message.payload.maskedUrl) {
+          // reset the image before replacing the masked url
+          media.setAttribute(srcAttr, "");
+          media.style.backgroundImage = "";
+
           media.classList.add("hvf-masked");
           if (message.payload.mediaType === "backgroundImage") {
             media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
           } else {
+            // media.setAttribute(srcAttr, this.blankThumbnail());
             media.setAttribute(srcAttr, message.payload.maskedUrl);
-            media.removeAttribute('srcset');
+            media.removeAttribute("srcset");
           }
-          media.setAttribute("data-hvf-original-url", originalUrl);
+          media.setAttribute("data-hvf-original-url", mediaUrl);
         }
 
         if (message.payload.invalidMedia === true) {
@@ -335,7 +384,10 @@ const hvf = {
         }
         media.classList.remove("hvf-analyzing");
 
-        this.removeImageLoader(media);
+        let renderCycle = media.getAttribute("hvf-render-cycle") || 0;
+        if (!message.payload.invalidMedia || renderCycle > this.maxRenderItem) {
+          this.removeImageLoader(media);
+        }
       }
     });
   },
@@ -396,6 +448,7 @@ const hvf = {
           mutation.target.classList.remove("hvf-analyzed");
           mutation.target.classList.remove("hvf-analyzing");
           mutation.target.classList.remove("hvf-invalid");
+          mutation.target.classList.add("hvf-multi-time-analyzing");
           this.triggerScanning();
         }
       }
@@ -435,6 +488,32 @@ const hvf = {
       true
     );
   },
+
+  blankThumbnail: function () {
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKjAQAAAAAlyMttAAABpUlEQVR42u3OMQEAAAwCIPuX1hjbAQlIX4qWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpbWmQEz1g2V4P8ycgAAAABJRU5ErkJggg==";
+  },
 };
 
-hvf.init();
+function hvfInitObserver(callback) {
+  const config = { childList: true, subtree: true, attributes: true };
+
+  const observer = new MutationObserver(callback);
+
+  observer.observe(document.body, config);
+}
+
+function hvgObserverCallback() {
+  if (
+    !document
+      .querySelector("body")
+      .classList.contains("hvf-extension-loaded") &&
+    !document
+      .querySelector("body")
+      .classList.contains("hvf-extension-power-off")
+  ) {
+    hvf.init();
+  }
+}
+
+hvfInitObserver(hvgObserverCallback);
+hvgObserverCallback();
