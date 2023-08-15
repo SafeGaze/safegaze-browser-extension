@@ -1,10 +1,24 @@
 // src/content/index.js
-var hvfIsInitializing = false;
 var hvf = {
   domObjectIndex: 0,
   interval: null,
-  maxRenderItem: 3,
+  maxRenderItem: 2,
   ignoreImageSize: 40,
+  getSettings: async function() {
+    const waitTime = 5e3;
+    return await new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("timeout"));
+      }, waitTime);
+      chrome.runtime.sendMessage({
+        type: "getSettings",
+        settingsKey: "power"
+      }).then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      });
+    });
+  },
   is_scrolling: function() {
     return this.lastScrollTime && (/* @__PURE__ */ new Date()).getTime() < this.lastScrollTime + 500;
   },
@@ -23,23 +37,15 @@ var hvf = {
   },
   // Initialize the extension
   init: async function() {
-    if (hvfIsInitializing === true) {
-      return;
-    }
     try {
-      hvfIsInitializing = true;
       console.log("init function called");
-      const power = await chrome.runtime.sendMessage({
-        type: "getSettings",
-        settingsKey: "power"
-      });
-      hvfIsInitializing = false;
+      const power = await this.getSettings();
       if (!power) {
         document.body.classList.add("hvf-extension-power-off");
         return;
       }
+      document.body.classList.add("hvf-extension-loaded");
       setTimeout(() => {
-        document.body.classList.add("hvf-extension-loaded");
         this.triggerScanning();
         this.receiveMedia();
       }, 1e3);
@@ -51,8 +57,10 @@ var hvf = {
         false
       );
     } catch (error) {
-      console.log("initial load failed!");
-      document.body.classList.add("hvf-extension-power-off");
+      if (!document.querySelector("body").classList.contains("hvf-extension-loaded") && !document.querySelector("body").classList.contains("hvf-extension-power-off")) {
+        console.log("initial load failed!");
+        document.body.classList.add("hvf-extension-power-off");
+      }
     }
   },
   isElementInViewport: function(el) {
