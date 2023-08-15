@@ -31,17 +31,9 @@ class SafeGazeDB {
     };
   }
 
-  #setDefaultSettings() {
-    this.addItem({
-      value: true,
-      settings: "power",
-    });
-  }
-
   #success() {
     this.openRequest.onsuccess = (e) => {
       this.db = e.target.result;
-      this.#setDefaultSettings();
     };
   }
 
@@ -58,6 +50,17 @@ class SafeGazeDB {
       const get = store.get(key);
       get.onsuccess = (e) => {
         resolve(get.result);
+      };
+    });
+  }
+
+  isExistsDB() {
+    return new Promise((resolve, reject) => {
+      this.openRequest.onsuccess = (e) => {
+        resolve(true);
+      };
+      this.openRequest.onerror = (e) => {
+        reject(false);
       };
     });
   }

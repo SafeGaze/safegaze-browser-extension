@@ -224,16 +224,9 @@ var SafeGazeDB = class {
       });
     };
   }
-  #setDefaultSettings() {
-    this.addItem({
-      value: true,
-      settings: "power"
-    });
-  }
   #success() {
     this.openRequest.onsuccess = (e) => {
       this.db = e.target.result;
-      this.#setDefaultSettings();
     };
   }
   addItem(value) {
@@ -251,6 +244,16 @@ var SafeGazeDB = class {
       };
     });
   }
+  isExistsDB() {
+    return new Promise((resolve, reject) => {
+      this.openRequest.onsuccess = (e) => {
+        resolve(true);
+      };
+      this.openRequest.onerror = (e) => {
+        reject(false);
+      };
+    });
+  }
 };
 var safeGazeSettings = new SafeGazeDB({
   dbName: "safeGaze",
@@ -262,6 +265,17 @@ var database_default = safeGazeSettings;
 
 // src/background/settings/runtimeEvents.js
 console.log("background.js");
+chrome.runtime.onInstalled.addListener(async function() {
+  console.log("installed the extension");
+  database_default.isExistsDB().then((res) => {
+    if (res) {
+      database_default.addItem({
+        value: true,
+        settings: "power"
+      });
+    }
+  });
+});
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("req", request);
   if (request.type === "setSettings") {
