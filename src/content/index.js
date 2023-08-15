@@ -1,12 +1,29 @@
-let hvfIsInitializing = false;
-
 const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 3,
+  maxRenderItem: 2,
 
   ignoreImageSize: 40,
+
+  getSettings: async function () {
+    const waitTime = 5000; // wait 5 sec
+    return await new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("timeout"));
+      }, waitTime);
+
+      chrome.runtime
+        .sendMessage({
+          type: "getSettings",
+          settingsKey: "power",
+        })
+        .then((value) => {
+          clearTimeout(timeoutId);
+          resolve(value);
+        });
+    });
+  },
 
   is_scrolling: function () {
     return (
@@ -33,19 +50,9 @@ const hvf = {
 
   // Initialize the extension
   init: async function () {
-    if (hvfIsInitializing === true) {
-      return;
-    }
     try {
-      hvfIsInitializing = true;
-
       console.log("init function called");
-
-      const power = await chrome.runtime.sendMessage({
-        type: "getSettings",
-        settingsKey: "power",
-      });
-      hvfIsInitializing = false;
+      const power = await this.getSettings();
 
       // console.log(power);
       if (!power) {
@@ -53,9 +60,9 @@ const hvf = {
         return;
       }
 
+      document.body.classList.add("hvf-extension-loaded");
       // start the extension
       setTimeout(() => {
-        document.body.classList.add("hvf-extension-loaded");
         this.triggerScanning();
         this.receiveMedia();
       }, 1000);
@@ -69,9 +76,18 @@ const hvf = {
         false
       );
     } catch (error) {
-      console.log("initial load failed!");
+      if (
+        !document
+          .querySelector("body")
+          .classList.contains("hvf-extension-loaded") &&
+        !document
+          .querySelector("body")
+          .classList.contains("hvf-extension-power-off")
+      ) {
+        console.log("initial load failed!");
 
-      document.body.classList.add("hvf-extension-power-off");
+        document.body.classList.add("hvf-extension-power-off");
+      }
     }
   },
 

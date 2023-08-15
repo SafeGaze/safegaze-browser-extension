@@ -224,9 +224,16 @@ var SafeGazeDB = class {
       });
     };
   }
+  #setDefaultSettings() {
+    this.addItem({
+      value: true,
+      settings: "power"
+    });
+  }
   #success() {
     this.openRequest.onsuccess = (e) => {
       this.db = e.target.result;
+      this.#setDefaultSettings();
     };
   }
   addItem(value) {
