@@ -223,6 +223,14 @@ const hvf = {
     this.removeUnUsedLoader();
 
     for (let i = 0; i < media.length; i++) {
+      // Remove the <source> tag
+      if (
+        media[i].tagName === "SOURCE" &&
+        media[i].parentNode.tagName === "PICTURE"
+      ) {
+        media[i].remove();
+      }
+
       // Is it background image?
       const backgroundImage =
         window.getComputedStyle(media[i]).backgroundImage ||
