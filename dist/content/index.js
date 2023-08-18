@@ -158,6 +158,9 @@ var hvf = {
     );
     this.removeUnUsedLoader();
     for (let i = 0; i < media.length; i++) {
+      if (media[i].tagName === "SOURCE" && media[i].parentNode.tagName === "PICTURE") {
+        media[i].remove();
+      }
       const backgroundImage = window.getComputedStyle(media[i]).backgroundImage || media[i].style.backgroundImage;
       const backgroundImageUrl = backgroundImage.slice(5, -2);
       const hasBackgroundImage = backgroundImage?.startsWith("url(");
