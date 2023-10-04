@@ -35,6 +35,7 @@ body:not(.hvf-extension-power-off) img.hvf-can-not-processed {
   display: flex;
   position: fixed;
   z-index: 999; */
+  display: none;
 }
 /* .hvf-loader.lds-ring {
   width: 80px;
