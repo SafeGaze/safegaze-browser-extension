@@ -12,7 +12,7 @@ var hvf = {
       }, waitTime);
       chrome.runtime.sendMessage({
         type: "getSettings",
-        settingsKey: "power"
+        settingsKey: window.location.host ?? "power"
       }).then((value) => {
         clearTimeout(timeoutId);
         resolve(value);

@@ -5,25 +5,33 @@ reloadBtn.addEventListener("click", () => {
   reloadBtn.classList.add("hide");
 });
 var checkbox = document.getElementById("power");
-chrome.runtime.sendMessage(
-  {
-    type: "getSettings",
-    settingsKey: "power"
-  },
-  (result) => {
-    console.log(result);
-    checkbox.checked = result || false;
-  }
-);
-checkbox.addEventListener("change", (event) => {
+async function getCurrentTabHostName() {
+  const tabs = await chrome.tabs.query({ active: true });
+  const { hostname } = new URL(tabs?.[0]?.url ?? "");
+  return hostname;
+}
+getCurrentTabHostName().then((host) => {
+  chrome.runtime.sendMessage(
+    {
+      type: "getSettings",
+      settingsKey: host ?? "power"
+    },
+    (result) => {
+      console.log(result);
+      checkbox.checked = result || false;
+    }
+  );
+});
+checkbox.addEventListener("change", async (event) => {
   let checked = event.currentTarget.checked;
   reloadBtn.classList.remove("hide");
+  const host = await getCurrentTabHostName();
   chrome.runtime.sendMessage(
     {
       type: "setSettings",
       payload: {
         value: checked,
-        settings: "power"
+        settings: host ?? "power"
       }
     },
     (result) => {
