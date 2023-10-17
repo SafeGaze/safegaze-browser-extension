@@ -1,45 +1,120 @@
 // on click #reload-btn
-const reloadBtn = document.getElementById('reload-window');
-reloadBtn.addEventListener('click', () => {
+const reloadBtn = document.getElementById("reload-window");
+reloadBtn.addEventListener("click", () => {
   chrome.tabs.reload();
-    // add class 'hide' to reload btn.
-    reloadBtn.classList.add('hide');
+  // add class 'hide' to reload btn.
+  reloadBtn.classList.add("hide");
 });
 
+const checkbox = document.getElementById("power");
 
-const checkbox = document.getElementById('power');
+async function getCurrentTabHostName() {
+  const tabs = await chrome.tabs.query({ active: true });
+  const { hostname } = new URL(tabs?.[0]?.url ?? "");
 
-chrome.runtime.sendMessage(
-  {
-    type: "getSettings",
-    settingsKey: "power",
-  },
-  (result) => {
-    console.log(result);
-    checkbox.checked = result || false;
+  return hostname;
+}
+
+getCurrentTabHostName().then((host) => {
+  if (host) {
+    document.querySelector(".header-content").innerHTML = host.replace(
+      "www.",
+      ""
+    );
   }
-);
+});
 
-checkbox.addEventListener('change', (event) => {
-  let checked = event.currentTarget.checked;
+getCurrentTabHostName().then((host) => {
+  const settings_key = host + "_counts";
 
-  // show the reload btn
-  reloadBtn.classList.remove('hide');
+  // each site process count
+  chrome.storage.local.get(settings_key).then((count) => {
+    if (count?.[settings_key]) {
+      document.querySelector("#current-site-processed-image span").innerHTML =
+        count?.[settings_key];
+    }
+  });
 
   chrome.runtime.sendMessage(
     {
-      type: "setSettings",
-      payload: {
-        value: checked,
-        settings: "power",
-      },
+      type: "getSettings",
+      settingsKey: host ?? "power",
     },
     (result) => {
-      if (!chrome.runtime.lastError) {
-        // message processing code goes here
+      const status = document.getElementById("safegaze-switch-status-check");
+      if (result) {
+        status.innerHTML = "UP";
+        document.querySelector(".main.container").style.display = "flex";
       } else {
-        // error handling code goes here
+        status.innerHTML = "DOWN";
+        document.querySelector(".main.container").style.display = "none";
       }
+
+      console.log(result);
+      checkbox.checked = result || false;
     }
   );
+});
+
+chrome.storage.local
+  .get("safe_gaze_total_counts")
+  .then((count) => {
+    if (count?.safe_gaze_total_counts) {
+      document.querySelector("#total-processed-image span").innerHTML =
+        count?.safe_gaze_total_counts;
+    }
+  })
+  .catch((error) => {
+    console.log("total count error error on script js", error);
+  });
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
+    getCurrentTabHostName().then((host) => {
+      const settings_key = host + "_counts";
+
+      if (key === "safe_gaze_total_counts" && newValue) {
+        document.querySelector("#total-processed-image span").innerHTML =
+          newValue;
+      } else if (key === settings_key && newValue) {
+        document.querySelector("#current-site-processed-image span").innerHTML =
+          newValue;
+      }
+    });
+  }
+});
+
+checkbox.addEventListener("change", (event) => {
+  let checked = event.currentTarget.checked;
+
+  const status = document.getElementById("safegaze-switch-status-check");
+  if (checked) {
+    status.innerHTML = "UP";
+    document.querySelector(".main.container").style.display = "flex";
+  } else {
+    status.innerHTML = "DOWN";
+    document.querySelector(".main.container").style.display = "none";
+  }
+
+  // show the reload btn
+  reloadBtn.classList.remove("hide");
+
+  getCurrentTabHostName().then((host) => {
+    chrome.runtime.sendMessage(
+      {
+        type: "setSettings",
+        payload: {
+          value: checked,
+          settings: host ?? "power",
+        },
+      },
+      (result) => {
+        if (!chrome.runtime.lastError) {
+          // message processing code goes here
+        } else {
+          // error handling code goes here
+        }
+      }
+    );
+  });
 });

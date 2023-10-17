@@ -10,40 +10,35 @@
   <body>
     <header class="text-center p-5 bg-slate-200">
       <div class="two-column-container">
-        <img class="header-logo" src="../logo/sg-logo-h.png" alt="SafeGaze" />
-        <div class="header-power text-right">
+        <h2 class="header-content"></h2>
+        <div class="header-power">
           <label class="switch">
             <input type="checkbox" id="power" name="power" />
             <span class="slider round"></span>
           </label>
+          <p id="safegaze-switch-status">
+            Safegaze <span id="safegaze-switch-status-check"></span>
+          </p>
           <p id="reload-window" class="hide">Reload to apply changes.</p>
         </div>
       </div>
     </header>
 
     <div class="main container">
-      <p>
-        <strong>SafeGaze</strong> detects and masks potentially haram & sensitive contents in your browser.</p><br/>
-        Currently it's in beta version. Please report any bugs or suggestions to <a href="mailto:support@safegaze.com"></a>
-        <sup>v1.0.0</sup>
-      </p>
-
-      <p>
-        <h4>Coming Soon</h4>
-        <ul>
-          <li>More customization to masking & blur</li>
-          <li>Mask only haram female images</li>
-          <li>Masking in videos</li>
-          <li>Site wise enable disable options</li>
-      </p>
+      <div id="current-site-processed-image">
+        <span>0</span> Sinful acts avoided
+      </div>
+      <div id="total-processed-image">
+        Total <span>0</span> Sinful acts avoided since beginning
+      </div>
     </div>
 
-
-    <footer class="text-center container">
-      <p>
-        <a target="_blank" href="https://safegaze.com">SafeGaze</a> is a product of <a target="_blank" href="https://www.halalz.co">Halalz</a>
-      </p>
-    </footer>
+    <div class="footer">
+      Please report any bugs or suggestions to
+      <a target="_blank" href="https://forms.gle/52w9KDHC3NwKbcWD9"
+        >this form</a
+      >
+    </div>
 
     <script src="/settings/script.js"></script>
   </body>
