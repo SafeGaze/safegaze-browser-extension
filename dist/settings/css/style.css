@@ -156,6 +156,12 @@ footer {
   background: #00cae4;
 }
 
+.footer {
+  text-align: center;
+  padding: 5px;
+  font-size: 12px;
+}
+
 #current-site-processed-image {
   display: flex;
   width: 207px;
