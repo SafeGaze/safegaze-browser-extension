@@ -319,3 +319,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
+
+// src/background/index.js
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.message === "openNewTab") {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const tab = tabs[0];
+      chrome.tabs.update(tab.id, { url: chrome.runtime.getURL("block.html") });
+    });
+  }
+});

@@ -1,3 +1,6 @@
+import { blockList } from "./blockList.js";
+import { ignoreList } from "./ignoreList";
+
 const hvf = {
   domObjectIndex: 0,
   interval: null,
@@ -48,6 +51,12 @@ const hvf = {
     return regex.test(imageSrc);
   },
 
+  openNewTabWithMessage() {
+    chrome.tabs.create({ url: "about:blank" }, function (tab) {
+      chrome.tabs.sendMessage(tab.id, { message: "Hello from content.js!" });
+    });
+  },
+
   // Initialize the extension
   init: async function () {
     try {
@@ -57,6 +66,26 @@ const hvf = {
       // console.log(power);
       if (!power) {
         document.body.classList.add("hvf-extension-power-off");
+        document.body.classList.add("hvf-show-website");
+
+        return;
+      }
+
+      const domain = window.location.hostname.replace("www.", "");
+
+      if (blockList.includes(domain)) {
+        console.log("blocking the domain", domain);
+        chrome.runtime.sendMessage({ message: "openNewTab" });
+        document.body.classList.add("hvf-extension-power-off");
+        return;
+      }
+
+      document.body.classList.add("hvf-show-website");
+
+      if (ignoreList.includes(domain)) {
+        console.log(`Ignoring this domain ${domain}`);
+        document.body.classList.add("hvf-extension-power-off");
+
         return;
       }
 
@@ -85,6 +114,7 @@ const hvf = {
           .classList.contains("hvf-extension-power-off")
       ) {
         console.log("initial load failed!");
+        document.body.classList.add("hvf-show-website");
 
         document.body.classList.add("hvf-extension-power-off");
       }

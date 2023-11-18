@@ -1,3 +1,6 @@
+body:not(.hvf-show-website) {
+  opacity: 0;
+}
 body:not(.hvf-extension-power-off) img:not(.hvf-invalid-img),
 body:not(.hvf-extension-power-off) image:not(.hvf-invalid-img) {
   /* opacity: 0 !important; */
