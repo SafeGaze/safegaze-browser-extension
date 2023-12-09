@@ -288,7 +288,8 @@ const hvf = {
         this.isElementInViewport(media[i]) === false ||
         (!hasBackgroundImage &&
           media[i].tagName !== "IMG" &&
-          media[i].tagName !== "image")
+          media[i].tagName !== "image") ||
+        this.isDataSrcImage(media[i].src)
       ) {
         continue;
       }
@@ -316,7 +317,7 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
-      if (url.startsWith("https://cdn.safegaze.com/annotated_image/")) {
+      if (url.startsWith("https://images.safegaze.com/annotated_image/")) {
         media[i].classList.add("hvf-analyzed");
         media[i].classList.remove("hvf-analyzing");
         continue;

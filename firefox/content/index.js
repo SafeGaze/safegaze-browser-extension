@@ -3588,7 +3588,7 @@ var hvf = {
       if (!hasBackgroundImage && media[i].tagName !== "image" && media[i].tagName !== "IMG") {
         media[i].classList.add("hvf-dom-checked");
       }
-      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image") {
+      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isDataSrcImage(media[i].src)) {
         continue;
       }
       const { width: imageWidth, height: imageHeight } = media[i].getBoundingClientRect();
@@ -3605,7 +3605,7 @@ var hvf = {
       if (hasBackgroundImage && media[i].tagName !== "IMG") {
         url = backgroundImageUrl;
       }
-      if (url.startsWith("https://cdn.safegaze.com/annotated_image/")) {
+      if (url.startsWith("https://images.safegaze.com/annotated_image/")) {
         media[i].classList.add("hvf-analyzed");
         media[i].classList.remove("hvf-analyzing");
         continue;

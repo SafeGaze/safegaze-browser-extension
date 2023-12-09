@@ -29,7 +29,6 @@ let ctx = await esbuild.context({
                 // Use fse.copy with the recursive option
                 await fse.copy(srcPath, destPath, {
                   overwrite: true,
-                  recursive: true,
                 });
               }
             })
