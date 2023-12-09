@@ -15,5 +15,8 @@
     "@tensorflow/tfjs-converter": "^3.1.0",
     "@tensorflow/tfjs-core": "^3.1.0",
     "esbuild": "^0.17.4"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.2.0"
   }
 }

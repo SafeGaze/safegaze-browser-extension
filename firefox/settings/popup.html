@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halalz visual filter browser extension</title>
+    <link rel="stylesheet" href="/settings/css/style.css" />
+  </head>
+  <body>
+    <header class="text-center p-5 bg-slate-200">
+      <div class="two-column-container">
+        <h2 class="header-content"></h2>
+        <div class="header-power">
+          <label class="switch">
+            <input type="checkbox" id="power" name="power" />
+            <span class="slider round"></span>
+          </label>
+          <p id="safegaze-switch-status">
+            Safegaze <span id="safegaze-switch-status-check"></span>
+          </p>
+          <p id="reload-window" class="hide">Reload to apply changes.</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="main container">
+      <div id="current-site-processed-image">
+        <span>0</span> Sinful acts avoided
+      </div>
+      <div id="total-processed-image">
+        Total <span>0</span> Sinful acts avoided since beginning
+      </div>
+    </div>
+
+    <div class="footer">
+      Please report any bugs or suggestions to
+      <a target="_blank" href="https://forms.gle/52w9KDHC3NwKbcWD9"
+        >this form</a
+      >
+    </div>
+
+    <script src="/settings/script.js"></script>
+  </body>
+</html>
