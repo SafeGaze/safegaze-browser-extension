@@ -3592,7 +3592,7 @@ var hvf = {
         continue;
       }
       const { width: imageWidth, height: imageHeight } = media[i].getBoundingClientRect();
-      if (imageWidth <= this.ignoreImageSize || imageHeight <= this.ignoreImageSize) {
+      if (imageWidth <= this.ignoreImageSize || imageHeight <= this.ignoreImageSize || media[i].id.includes("captcha") || media[i].classList.contains("captcha")) {
         media[i].classList.add("hvf-ignored-image");
         continue;
       }
