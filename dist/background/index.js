@@ -48,30 +48,11 @@ var remoteAnalyzer = class {
         invalidMedia: true
       };
     }
-    chrome.storage.local.get("safe_gaze_total_counts").then((count) => {
-      chrome.storage.local.set({
-        safe_gaze_total_counts: count?.safe_gaze_total_counts ? count?.safe_gaze_total_counts + 1 : 1
-      }).then(() => {
-        console.log("Value is set for total count remoteanalyzer");
-      });
-    }).catch((error) => {
-      console.log("total count error error remoteanalyzer", error);
-    });
-    this.getCurrentTabHostName().then(async (host) => {
-      const settings_key = host + "_counts";
-      const count = await chrome.storage.local.get(settings_key);
-      chrome.storage.local.set({
-        [settings_key]: count?.[settings_key] ? count?.[settings_key] + 1 : 1
-      }).then(() => {
-        console.log("Value is set for each website remoteanalyzer");
-      });
-    }).catch((error) => {
-      console.log("error on current tab remoteanalyzer", error);
-    });
     let maskedUrl = annotatedData.media[0].processed_media_url;
     return {
       shouldMask: true,
-      maskedUrl
+      maskedUrl,
+      activate: true
     };
   };
   getAnnotatedMedia = async (url) => {
@@ -324,6 +305,35 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       const tab = tabs[0];
       chrome.tabs.update(tab.id, { url: chrome.runtime.getURL("block.html") });
+    });
+  }
+});
+var getCurrentTabHostName2 = async () => {
+  const tabs = await chrome.tabs.query({ active: true });
+  const { hostname } = new URL(tabs?.[0]?.url ?? "");
+  return hostname;
+};
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "HVF-TOTAL-COUNT" && message.activate === true) {
+    chrome.storage.local.get("safe_gaze_total_counts").then((count) => {
+      chrome.storage.local.set({
+        safe_gaze_total_counts: count?.safe_gaze_total_counts ? count?.safe_gaze_total_counts + 1 : 1
+      }).then(() => {
+        console.log("Value is set for total count remoteanalyzer");
+      });
+    }).catch((error) => {
+      console.log("total count error error remoteanalyzer", error);
+    });
+    getCurrentTabHostName2().then(async (host) => {
+      const settings_key = host + "_counts";
+      const count = await chrome.storage.local.get(settings_key);
+      chrome.storage.local.set({
+        [settings_key]: count?.[settings_key] ? count?.[settings_key] + 1 : 1
+      }).then(() => {
+        console.log("Value is set for each website remoteanalyzer");
+      });
+    }).catch((error) => {
+      console.log("error on current tab remoteanalyzer", error);
     });
   }
 });

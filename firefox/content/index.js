@@ -3399,11 +3399,132 @@ var ignoreList = [
   "islamqa.info"
 ];
 
+// src/background/media-processor/remoteAnalyzer.js
+var remoteAnalyzer = class {
+  constructor(data) {
+    this.data = data;
+  }
+  getCurrentTabHostName = async () => {
+    const tabs = await browser.tabs.query({ active: true });
+    const { hostname } = new URL(tabs?.[0]?.url ?? "");
+    return hostname;
+  };
+  analyze = async () => {
+    let annotatedData;
+    if (this.data.mediaUrl.startsWith(
+      "https://images.safegaze.com/annotated_image/"
+    )) {
+      return {
+        shouldMask: true,
+        maskedUrl: this.data.mediaUrl
+      };
+    }
+    try {
+      let relativeFilePath = await this.relativeFilePath(this.data.mediaUrl);
+      if (await this.urlExists(relativeFilePath)) {
+        console.log("url exists");
+        return {
+          shouldMask: true,
+          maskedUrl: relativeFilePath
+        };
+      }
+    } catch (error) {
+      console.log("Error checking if url exists");
+      console.log(error);
+    }
+    try {
+      annotatedData = await this.getAnnotatedMedia(this.data.mediaUrl);
+    } catch (error) {
+      console.log("Error getting annotated media");
+      console.log(error);
+      annotatedData = {
+        success: false
+      };
+    }
+    console.log(annotatedData);
+    if (annotatedData.success === false || annotatedData.media.length <= 0 || annotatedData.media[0].success === false) {
+      return {
+        shouldMask: false,
+        maskedUrl: null,
+        invalidMedia: true
+      };
+    }
+    let maskedUrl = annotatedData.media[0].processed_media_url;
+    return {
+      shouldMask: true,
+      maskedUrl,
+      activate: true
+    };
+  };
+  getAnnotatedMedia = async (url) => {
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    let raw = JSON.stringify({
+      media: [
+        {
+          media_url: url,
+          media_type: "image",
+          has_attachment: false
+        }
+      ]
+    });
+    let requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+    let response = await fetch(
+      "https://api.safegaze.com/api/v1/analyze",
+      requestOptions
+    );
+    let result = await response.json();
+    console.log({
+      request: {
+        media: [
+          {
+            media_url: url,
+            media_type: "image",
+            has_attachment: false
+          }
+        ]
+      },
+      response: result
+    });
+    return result;
+  };
+  urlExists = async (url) => {
+    const response = await fetch(url, {
+      method: "HEAD",
+      cache: "no-cache"
+    }).catch(() => ({ ok: false }));
+    return response.ok;
+  };
+  relativeFilePath = async (originalMediaUrl) => {
+    const hash = await this.sha256(originalMediaUrl);
+    let newUrl = `https://images.safegaze.com/annotated_image/${hash}/image.png`;
+    return newUrl;
+  };
+  sha256 = async (str) => {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+      return hashHex;
+    } catch (error) {
+      return "";
+    }
+  };
+};
+var remoteAnalyzer_default = remoteAnalyzer;
+
 // src/content/index.js
 var hvf = {
   domObjectIndex: 0,
   interval: null,
-  maxRenderItem: 2,
+  maxRenderItem: 1,
   ignoreImageSize: 40,
   getSettings: async function() {
     const waitTime = 5e3;
@@ -3634,7 +3755,7 @@ var hvf = {
         if (loader) {
           loader.classList.add("hvf-analyzed-loader-el");
         }
-        let payload = {
+        let data = {
           mediaUrl: url,
           mediaType: hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image" ? "backgroundImage" : "image",
           domObjectIndex: this.domObjectIndex,
@@ -3642,18 +3763,60 @@ var hvf = {
           shouldMask: false,
           maskedUrl: null
         };
-        browser.runtime.sendMessage(
-          {
-            action: "HVF-MEDIA-ANALYSIS-REQUEST",
-            payload
-          },
-          (result) => {
-            if (!browser.runtime.lastError) {
-            } else {
+        let analyzer = new remoteAnalyzer_default(data);
+        analyzer.analyze().then((result) => {
+          console.log("Media analysis complete");
+          console.log(result);
+          this.receiveMediaV2({
+            payload: Object.assign(data, result)
+          });
+          browser.runtime.sendMessage(
+            {
+              action: "HVF-TOTAL-COUNT",
+              activate: result?.activate
+            },
+            (result2) => {
+              if (!browser.runtime.lastError) {
+              } else {
+              }
             }
-          }
-        );
+          );
+        }).catch((err) => {
+          console.log("Error analyzing media");
+          console.log(err);
+        });
       }
+    }
+  },
+  receiveMediaV2: function(message) {
+    let index = message.payload.domObjectIndex;
+    let media = document.querySelector(".hvf-dom-id-" + index);
+    let srcAttr = message.payload.srcAttr;
+    let mediaUrl = message.payload.mediaUrl;
+    if (!media)
+      return;
+    if (message.payload.shouldMask && message.payload.maskedUrl) {
+      media.setAttribute(srcAttr, "");
+      media.style.backgroundImage = "";
+      media.classList.add("hvf-masked");
+      if (message.payload.mediaType === "backgroundImage") {
+        media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
+      } else {
+        media.setAttribute(srcAttr, message.payload.maskedUrl);
+        media.removeAttribute("srcset");
+      }
+      media.setAttribute("data-hvf-original-url", mediaUrl);
+    }
+    if (message.payload.invalidMedia === true) {
+      media.classList.add("hvf-invalid");
+    } else {
+      media.classList.add("hvf-analyzed");
+      media.classList.remove("hvf-invalid");
+    }
+    media.classList.remove("hvf-analyzing");
+    let renderCycle = media.getAttribute("hvf-render-cycle") || 0;
+    if (!message.payload.invalidMedia || renderCycle > this.maxRenderItem) {
+      this.removeImageLoader(media);
     }
   },
   // Receive media from the background script

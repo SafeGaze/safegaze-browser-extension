@@ -1,11 +1,12 @@
 import { blockList } from "./blockList.js";
 import { ignoreList } from "./ignoreList";
+import remoteAnalyzer from "../background/media-processor/remoteAnalyzer.js";
 
 const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 2,
+  maxRenderItem: 1,
 
   ignoreImageSize: 40,
 
@@ -372,7 +373,7 @@ const hvf = {
           loader.classList.add("hvf-analyzed-loader-el");
         }
 
-        let payload = {
+        let data = {
           mediaUrl: url,
           mediaType:
             hasBackgroundImage &&
@@ -386,20 +387,92 @@ const hvf = {
           maskedUrl: null,
         };
 
-        chrome.runtime.sendMessage(
-          {
-            action: "HVF-MEDIA-ANALYSIS-REQUEST",
-            payload: payload,
-          },
-          (result) => {
-            if (!chrome.runtime.lastError) {
-              // message processing code goes here
-            } else {
-              // error handling code goes here
-            }
-          }
-        );
+        let analyzer = new remoteAnalyzer(data);
+
+        analyzer
+          .analyze()
+          .then((result) => {
+            console.log("Media analysis complete");
+            console.log(result);
+
+            this.receiveMediaV2({
+              payload: Object.assign(data, result),
+            });
+
+            chrome.runtime.sendMessage(
+              {
+                action: "HVF-TOTAL-COUNT",
+                activate: result?.activate,
+              },
+              (result) => {
+                if (!chrome.runtime.lastError) {
+                  // message processing code goes here
+                } else {
+                  // error handling code goes here
+                }
+              }
+            );
+          })
+          .catch((err) => {
+            console.log("Error analyzing media");
+            console.log(err);
+          });
+
+        // chrome.runtime.sendMessage(
+        //   {
+        //     action: "HVF-MEDIA-ANALYSIS-REQUEST",
+        //     payload: payload,
+        //   },
+        //   (result) => {
+        //     if (!chrome.runtime.lastError) {
+        //       // message processing code goes here
+        //     } else {
+        //       // error handling code goes here
+        //     }
+        //   }
+        // );
       }
+    }
+  },
+
+  receiveMediaV2: function (message) {
+    let index = message.payload.domObjectIndex;
+    let media = document.querySelector(".hvf-dom-id-" + index);
+
+    // console.log(message.payload);
+
+    let srcAttr = message.payload.srcAttr;
+    let mediaUrl = message.payload.mediaUrl;
+
+    if (!media) return;
+
+    if (message.payload.shouldMask && message.payload.maskedUrl) {
+      // reset the image before replacing the masked url
+      media.setAttribute(srcAttr, "");
+      media.style.backgroundImage = "";
+
+      media.classList.add("hvf-masked");
+      if (message.payload.mediaType === "backgroundImage") {
+        media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
+      } else {
+        // media.setAttribute(srcAttr, this.blankThumbnail());
+        media.setAttribute(srcAttr, message.payload.maskedUrl);
+        media.removeAttribute("srcset");
+      }
+      media.setAttribute("data-hvf-original-url", mediaUrl);
+    }
+
+    if (message.payload.invalidMedia === true) {
+      media.classList.add("hvf-invalid");
+    } else {
+      media.classList.add("hvf-analyzed");
+      media.classList.remove("hvf-invalid");
+    }
+    media.classList.remove("hvf-analyzing");
+
+    let renderCycle = media.getAttribute("hvf-render-cycle") || 0;
+    if (!message.payload.invalidMedia || renderCycle > this.maxRenderItem) {
+      this.removeImageLoader(media);
     }
   },
 
