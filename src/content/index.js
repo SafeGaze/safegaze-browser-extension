@@ -2,6 +2,10 @@ import { blockList } from "./blockList.js";
 import { ignoreList } from "./ignoreList";
 import remoteAnalyzer from "../background/media-processor/remoteAnalyzer.js";
 
+require("@tensorflow/tfjs-backend-cpu");
+require("@tensorflow/tfjs-backend-webgl");
+const cocoSsd = require("@tensorflow-models/coco-ssd");
+
 const hvf = {
   domObjectIndex: 0,
   interval: null,
@@ -56,6 +60,23 @@ const hvf = {
     chrome.tabs.create({ url: "about:blank" }, function (tab) {
       chrome.tabs.sendMessage(tab.id, { message: "Hello from content.js!" });
     });
+  },
+
+  // detect images
+  async objectDetection(img) {
+    try {
+      // Load the model.
+      const model = await cocoSsd.load();
+
+      // Classify the image.
+      const predictions = await model.detect(img);
+
+      const foundPerson = predictions.find((pred) => pred.class === "person");
+      return !!foundPerson;
+    } catch (error) {
+      console.log("error, easin", error);
+      return false;
+    }
   },
 
   // Initialize the extension
@@ -373,6 +394,9 @@ const hvf = {
           loader.classList.add("hvf-analyzed-loader-el");
         }
 
+        media[i].setAttribute("crossorigin", "anonymous");
+
+        const that = this;
         let data = {
           mediaUrl: url,
           mediaType:
@@ -389,34 +413,44 @@ const hvf = {
 
         let analyzer = new remoteAnalyzer(data);
 
-        analyzer
-          .analyze()
-          .then((result) => {
-            console.log("Media analysis complete");
-            console.log(result);
+        (async function () {
+          const detectPerson = await that.objectDetection(media[i]);
+          if (!detectPerson) {
+            media[i].classList.add("hvf-ignored-image");
+            media[i].classList.add("hvf-human-not-included");
 
-            this.receiveMediaV2({
-              payload: Object.assign(data, result),
-            });
+            return;
+          }
 
-            chrome.runtime.sendMessage(
-              {
-                action: "HVF-TOTAL-COUNT",
-                activate: result?.activate,
-              },
-              (result) => {
-                if (!chrome.runtime.lastError) {
-                  // message processing code goes here
-                } else {
-                  // error handling code goes here
+          analyzer
+            .analyze()
+            .then((result) => {
+              console.log("Media analysis complete");
+              console.log(result);
+
+              that.receiveMediaV2({
+                payload: Object.assign(data, result),
+              });
+
+              chrome.runtime.sendMessage(
+                {
+                  action: "HVF-TOTAL-COUNT",
+                  activate: result?.activate,
+                },
+                (result) => {
+                  if (!chrome.runtime.lastError) {
+                    // message processing code goes here
+                  } else {
+                    // error handling code goes here
+                  }
                 }
-              }
-            );
-          })
-          .catch((err) => {
-            console.log("Error analyzing media");
-            console.log(err);
-          });
+              );
+            })
+            .catch((err) => {
+              console.log("Error analyzing media");
+              console.log(err);
+            });
+        })();
 
         // chrome.runtime.sendMessage(
         //   {
