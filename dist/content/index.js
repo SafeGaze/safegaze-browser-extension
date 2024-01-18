@@ -63820,8 +63820,36 @@ var hvf = {
       const foundPerson = predictions.find((pred) => pred.class === "person");
       return !!foundPerson;
     } catch (error) {
-      console.log("error, easin", error);
+      console.log("error on detecting image", error);
       return false;
+    }
+  },
+  async imageURLToBase64(url) {
+    try {
+      const corsAnywhereUrl = "https://cors-anywhere.herokuapp.com/";
+      const imageUrlWithCors = `${corsAnywhereUrl}${url}`;
+      const response = await fetch(imageUrlWithCors, {
+        method: "GET",
+        // POST, PUT, DELETE, etc.
+        headers: {
+          // the content type header value is usually auto-set
+          // depending on the request body
+          "Content-Type": "application/json;charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      });
+      const blob = await response.blob();
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Error converting image to base64:", error);
+      throw error;
     }
   },
   // Initialize the extension
@@ -64017,7 +64045,6 @@ var hvf = {
         if (loader) {
           loader.classList.add("hvf-analyzed-loader-el");
         }
-        media[i].setAttribute("crossorigin", "anonymous");
         const that = this;
         let data = {
           mediaUrl: url,
@@ -64029,7 +64056,11 @@ var hvf = {
         };
         let analyzer = new remoteAnalyzer_default(data);
         (async function() {
-          const detectPerson = await that.objectDetection(media[i]);
+          const base64Image = await that.imageURLToBase64(media[i].src);
+          const imgElement = document.createElement("img");
+          imgElement.src = base64Image;
+          imgElement.crossOrigin = "anonymous";
+          const detectPerson = await that.objectDetection(imgElement);
           if (!detectPerson) {
             media[i].classList.add("hvf-ignored-image");
             media[i].classList.add("hvf-human-not-included");

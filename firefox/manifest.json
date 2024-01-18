@@ -22,7 +22,7 @@
     "48": "logo/sg-logo-only.png",
     "128": "logo/sg-logo-only.png"
   },
-  "permissions": ["tabs", "activeTab", "storage"],
+  "permissions": ["tabs", "activeTab", "storage", "<all_urls>"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
