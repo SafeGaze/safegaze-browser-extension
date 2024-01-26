@@ -313,6 +313,22 @@ var getCurrentTabHostName2 = async () => {
   const { hostname } = new URL(tabs?.[0]?.url ?? "");
   return hostname;
 };
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "CONVERT-IMAGE-TO-BASE64") {
+    fetch(request.imgUrl).then(async (response) => {
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        sendResponse({
+          complete: true,
+          result: reader.result
+        });
+      };
+      reader.readAsDataURL(blob);
+    });
+    return true;
+  }
+});
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "HVF-TOTAL-COUNT" && message.activate === true) {
     chrome.storage.local.get("safe_gaze_total_counts").then((count) => {

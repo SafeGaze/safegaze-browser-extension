@@ -63791,6 +63791,18 @@ var hvf = {
       });
     });
   },
+  getImageBase64: async function(imgUrl) {
+    return await new Promise((resolve, reject) => {
+      browser.runtime.sendMessage({
+        action: "CONVERT-IMAGE-TO-BASE64",
+        imgUrl
+      }).then((value) => {
+        if (value?.complete) {
+          resolve(value);
+        }
+      });
+    });
+  },
   is_scrolling: function() {
     return this.lastScrollTime && (/* @__PURE__ */ new Date()).getTime() < this.lastScrollTime + 500;
   },
@@ -63826,8 +63838,7 @@ var hvf = {
   },
   async imageURLToBase64(url) {
     try {
-      const corsAnywhereUrl = "https://cors-anywhere.herokuapp.com/";
-      const imageUrlWithCors = `${corsAnywhereUrl}${url}`;
+      const imageUrlWithCors = `${url}`;
       const response = await fetch(imageUrlWithCors, {
         method: "GET",
         // POST, PUT, DELETE, etc.
@@ -64056,7 +64067,8 @@ var hvf = {
         };
         let analyzer = new remoteAnalyzer_default(data);
         (async function() {
-          const base64Image = await that.imageURLToBase64(media[i].src);
+          const result = await that.getImageBase64(media[i].src);
+          const base64Image = result.result;
           const imgElement = document.createElement("img");
           imgElement.src = base64Image;
           imgElement.crossOrigin = "anonymous";
@@ -64066,18 +64078,18 @@ var hvf = {
             media[i].classList.add("hvf-human-not-included");
             return;
           }
-          analyzer.analyze().then((result) => {
+          analyzer.analyze().then((result2) => {
             console.log("Media analysis complete");
-            console.log(result);
+            console.log(result2);
             that.receiveMediaV2({
-              payload: Object.assign(data, result)
+              payload: Object.assign(data, result2)
             });
             browser.runtime.sendMessage(
               {
                 action: "HVF-TOTAL-COUNT",
-                activate: result?.activate
+                activate: result2?.activate
               },
-              (result2) => {
+              (result3) => {
                 if (!browser.runtime.lastError) {
                 } else {
                 }

@@ -23,6 +23,7 @@
     "128": "logo/sg-logo-only.png"
   },
   "permissions": ["tabs", "activeTab", "storage"],
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

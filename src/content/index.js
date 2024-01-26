@@ -33,6 +33,21 @@ const hvf = {
     });
   },
 
+  getImageBase64: async function (imgUrl) {
+    return await new Promise((resolve, reject) => {
+      chrome.runtime
+        .sendMessage({
+          action: "CONVERT-IMAGE-TO-BASE64",
+          imgUrl,
+        })
+        .then((value) => {
+          if (value?.complete) {
+            resolve(value);
+          }
+        });
+    });
+  },
+
   is_scrolling: function () {
     return (
       this.lastScrollTime && new Date().getTime() < this.lastScrollTime + 500
@@ -81,8 +96,7 @@ const hvf = {
 
   async imageURLToBase64(url) {
     try {
-      const corsAnywhereUrl = "https://cors-anywhere.herokuapp.com/";
-      const imageUrlWithCors = `${corsAnywhereUrl}${url}`;
+      const imageUrlWithCors = `${url}`;
 
       // Fetch the image
       const response = await fetch(imageUrlWithCors, {
@@ -444,7 +458,8 @@ const hvf = {
         let analyzer = new remoteAnalyzer(data);
 
         (async function () {
-          const base64Image = await that.imageURLToBase64(media[i].src);
+          const result = await that.getImageBase64(media[i].src);
+          const base64Image = result.result;
           const imgElement = document.createElement("img");
           // Set base64 as src
           imgElement.src = base64Image;
