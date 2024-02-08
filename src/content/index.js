@@ -461,6 +461,7 @@ const hvf = {
           const result = await that.getImageBase64(media[i].src);
           const base64Image = result.result;
           const imgElement = document.createElement("img");
+
           // Set base64 as src
           imgElement.src = base64Image;
           imgElement.crossOrigin = "anonymous";
@@ -473,11 +474,24 @@ const hvf = {
             return;
           }
 
+          if (media[i].classList.contains("hvf-could-not-processed-img")) {
+            data.mediaUrl = base64Image;
+          }
+
           analyzer
             .analyze()
             .then((result) => {
               console.log("Media analysis complete");
-              console.log(result);
+
+              if (result.invalidMedia) {
+                media[i].classList.remove("hvf-analyzed");
+                media[i].classList.remove("hvf-analyzing");
+                media[i].classList.remove("hvf-invalid");
+                media[i].classList.add("hvf-could-not-processed-img");
+                that.triggerScanning();
+                return;
+              }
+              media[i].classList.remove("hvf-could-not-processed-img");
 
               that.receiveMediaV2({
                 payload: Object.assign(data, result),
