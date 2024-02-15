@@ -63791,6 +63791,16 @@ var hvf = {
       });
     });
   },
+  getOpacity: async function() {
+    return await new Promise((resolve, reject) => {
+      browser.runtime.sendMessage({
+        type: "getSettings",
+        settingsKey: window.location.host + "_opacity"
+      }).then((value) => {
+        resolve(value);
+      });
+    });
+  },
   getImageBase64: async function(imgUrl) {
     return await new Promise((resolve, reject) => {
       browser.runtime.sendMessage({
@@ -63885,6 +63895,19 @@ var hvf = {
         console.log(`Ignoring this domain ${domain}`);
         document.body.classList.add("hvf-extension-power-off");
         return;
+      }
+      if (!document.getElementById("opacity-style")) {
+        const getOpacity = await this.getOpacity();
+        var styles = `
+            body:not(.hvf-extension-power-off) img:not(.hvf-invalid-img),
+            body:not(.hvf-extension-power-off) image:not(.hvf-invalid-img) {
+              filter: blur(${getOpacity ?? 15}px) !important;
+            }
+      `;
+        var styleSheet = document.createElement("style");
+        styleSheet.id = "opacity-style";
+        styleSheet.innerText = styles;
+        document.body.append(styleSheet);
       }
       document.body.classList.add("hvf-extension-loaded");
       setTimeout(() => {
@@ -64070,7 +64093,6 @@ var hvf = {
           const result = await that.getImageBase64(media[i].src);
           const base64Image = result.result;
           const imgElement = document.createElement("img");
-          console.log({ base64Image });
           imgElement.src = base64Image;
           imgElement.crossOrigin = "anonymous";
           const detectPerson = await that.objectDetection(imgElement);
@@ -64084,7 +64106,6 @@ var hvf = {
           }
           analyzer.analyze().then((result2) => {
             console.log("Media analysis complete");
-            console.log({ result: result2 });
             if (result2.invalidMedia) {
               media[i].classList.remove("hvf-analyzed");
               media[i].classList.remove("hvf-analyzing");
