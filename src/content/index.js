@@ -173,10 +173,18 @@ const hvf = {
       if (!document.getElementById("opacity-style")) {
         const getOpacity = await this.getOpacity();
 
+        console.log({ getOpacity });
+
         var styles = `
             body:not(.hvf-extension-power-off) img:not(.hvf-invalid-img),
             body:not(.hvf-extension-power-off) image:not(.hvf-invalid-img) {
-              filter: blur(${getOpacity ?? 15}px) !important;
+              filter: blur(${
+                getOpacity !== true &&
+                getOpacity !== false &&
+                Number.isInteger(Number(getOpacity))
+                  ? getOpacity
+                  : 15
+              }px) !important;
             }
       `;
         var styleSheet = document.createElement("style");
