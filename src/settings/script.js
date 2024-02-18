@@ -113,6 +113,7 @@ document
           }
         }
       );
+      chrome.tabs.reload();
     });
   });
 
@@ -154,6 +155,7 @@ checkbox.addEventListener("change", (event) => {
         }
       }
     );
+    chrome.tabs.reload();
   });
 });
 

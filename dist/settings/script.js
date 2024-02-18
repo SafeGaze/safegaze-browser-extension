@@ -83,6 +83,7 @@ document.getElementById("settings-on-off").addEventListener("change", (event) =>
         }
       }
     );
+    chrome.tabs.reload();
   });
 });
 checkbox.addEventListener("change", (event) => {
@@ -113,6 +114,7 @@ checkbox.addEventListener("change", (event) => {
         }
       }
     );
+    chrome.tabs.reload();
   });
 });
 document.querySelector(".eye-crossed-1-parent").addEventListener("click", () => {
