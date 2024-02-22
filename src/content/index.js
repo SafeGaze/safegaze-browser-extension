@@ -236,7 +236,7 @@ const hvf = {
 
     // console.log(result);
 
-    return result;
+    return true;
   },
 
   throttleWaiting: false, // Initially, we're not waiting
@@ -389,7 +389,6 @@ const hvf = {
         media[i].classList.contains("hvf-too-many-render") ||
         media[i].classList.contains("hvf-analyzing") ||
         media[i].classList.contains("hvf-analyzed") ||
-        this.isElementInViewport(media[i]) === false ||
         (!hasBackgroundImage &&
           media[i].tagName !== "IMG" &&
           media[i].tagName !== "image") ||
