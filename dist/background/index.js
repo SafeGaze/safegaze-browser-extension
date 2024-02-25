@@ -353,3 +353,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   }
 });
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.clear();
+});
