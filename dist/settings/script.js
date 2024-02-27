@@ -5,6 +5,7 @@ reloadBtn.addEventListener("click", () => {
   reloadBtn.classList.add("hide");
 });
 var checkbox = document.getElementById("power");
+var kafhDns = document.getElementById("kahf-dns");
 async function getCurrentTabHostName() {
   const tabs = await chrome.tabs.query({ active: true });
   const { hostname } = new URL(tabs?.[0]?.url ?? "");
@@ -46,6 +47,15 @@ getCurrentTabHostName().then((host) => {
     }
   );
 });
+chrome.runtime.sendMessage(
+  {
+    type: "getSettings",
+    settingsKey: "kafh-dns"
+  },
+  (result) => {
+    kafhDns.checked = result || false;
+  }
+);
 chrome.storage.local.get("safe_gaze_total_counts").then((count) => {
   if (count?.safe_gaze_total_counts) {
     document.querySelector("#total-processed-image").innerHTML = count?.safe_gaze_total_counts;
@@ -116,6 +126,23 @@ checkbox.addEventListener("change", (event) => {
     );
     chrome.tabs.reload();
   });
+});
+kafhDns.addEventListener("change", (event) => {
+  let checked = event.currentTarget.checked;
+  chrome.runtime.sendMessage(
+    {
+      type: "setSettings",
+      payload: {
+        value: checked,
+        settings: "kafh-dns"
+      }
+    },
+    (result) => {
+      if (!chrome.runtime.lastError) {
+      } else {
+      }
+    }
+  );
 });
 document.querySelector(".eye-crossed-1-parent").addEventListener("click", () => {
   document.querySelector(".childlogo-parent").classList.toggle("hide-el");

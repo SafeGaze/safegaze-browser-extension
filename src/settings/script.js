@@ -7,6 +7,7 @@ reloadBtn.addEventListener("click", () => {
 });
 
 const checkbox = document.getElementById("power");
+const kafhDns = document.getElementById("kahf-dns");
 
 async function getCurrentTabHostName() {
   const tabs = await chrome.tabs.query({ active: true });
@@ -61,6 +62,16 @@ getCurrentTabHostName().then((host) => {
     }
   );
 });
+
+chrome.runtime.sendMessage(
+  {
+    type: "getSettings",
+    settingsKey: "kafh-dns",
+  },
+  (result) => {
+    kafhDns.checked = result || false;
+  }
+);
 
 chrome.storage.local
   .get("safe_gaze_total_counts")
@@ -157,6 +168,27 @@ checkbox.addEventListener("change", (event) => {
     );
     chrome.tabs.reload();
   });
+});
+
+kafhDns.addEventListener("change", (event) => {
+  let checked = event.currentTarget.checked;
+
+  chrome.runtime.sendMessage(
+    {
+      type: "setSettings",
+      payload: {
+        value: checked,
+        settings: "kafh-dns",
+      },
+    },
+    (result) => {
+      if (!chrome.runtime.lastError) {
+        // message processing code goes here
+      } else {
+        // error handling code goes here
+      }
+    }
+  );
 });
 
 document
