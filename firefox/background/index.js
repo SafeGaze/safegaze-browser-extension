@@ -353,3 +353,6 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   }
 });
+browser.runtime.onStartup.addListener(() => {
+  browser.storage.local.clear();
+});
