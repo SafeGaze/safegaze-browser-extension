@@ -32,7 +32,7 @@ getCurrentTabHostName().then((host) => {
       settingsKey: host ?? "power"
     },
     (result) => {
-      const status = document.getElementById("safegaze-switch-status-check");
+      const status = document.querySelector(".safegaze-up span");
       if (result) {
         status.innerHTML = "UP";
         document.querySelector(".main.container").style.display = "flex";
@@ -98,7 +98,7 @@ document.getElementById("settings-on-off").addEventListener("change", (event) =>
 });
 checkbox.addEventListener("change", (event) => {
   let checked = event.currentTarget.checked;
-  const status = document.getElementById("safegaze-switch-status-check");
+  const status = document.querySelector(".safegaze-up span");
   if (checked) {
     status.innerHTML = "UP";
     document.querySelector(".main.container").style.display = "flex";
