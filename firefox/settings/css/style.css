@@ -800,7 +800,8 @@ footer {
   width: 44px;
   background-color: #fff;
   box-shadow: 0 1px 5px rgba(126, 133, 142, 0.12);
-  z-index: 2;
+  /* z-index: 2; */
+  cursor: pointer;
 }
 .gender-selector-child {
   width: 232px;
@@ -1209,6 +1210,34 @@ input[type="range"]::-moz-range-thumb {
   appearance: none;
   transition: 0.3s;
   background-color: red; */
+}
+.rectangle-parent2:hover .shareit {
+  opacity: 1;
+  left: 0;
+}
+.shareit {
+  background-color: gray;
+  display: block;
+  width: 100px;
+  position: absolute;
+  z-index: 9999999999999;
+  top: -196px;
+  color: #fff;
+  left: -9999px;
+  padding: 10px;
+  border-radius: 10px;
+  opacity: 0;
+  transition: all 0.4s;
+}
+.shareit a {
+  text-decoration: none;
+  color: #fff;
+  border-bottom: 1px solid #222;
+  display: block;
+  padding: 6px 0;
+}
+.shareit a:last-child {
+  border: none;
 }
 @supports not (color: color-mix(in srgb, red, red)) {
   input {
