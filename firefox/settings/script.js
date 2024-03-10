@@ -47,6 +47,21 @@ getCurrentTabHostName().then((host) => {
     }
   );
 });
+getCurrentTabHostName().then((host) => {
+  browser.runtime.sendMessage(
+    {
+      type: "getSettings",
+      settingsKey: host + "_settings_on_off"
+    },
+    (result) => {
+      if (result) {
+        document.querySelectorAll("#settings-on-off option")[0].setAttribute("selected", "selected");
+      } else {
+        document.querySelectorAll("#settings-on-off option")[1].setAttribute("selected", "selected");
+      }
+    }
+  );
+});
 browser.runtime.sendMessage(
   {
     type: "getSettings",
@@ -77,14 +92,18 @@ browser.storage.onChanged.addListener((changes, namespace) => {
 });
 document.getElementById("settings-on-off").addEventListener("change", (event) => {
   let switchOption = event.currentTarget.value;
-  checkbox.checked = switchOption === "on";
+  if (switchOption === "on") {
+    document.querySelectorAll("#settings-on-off option")[0].setAttribute("selected", "selected");
+  } else {
+    document.querySelectorAll("#settings-on-off option")[1].setAttribute("selected", "selected");
+  }
   getCurrentTabHostName().then((host) => {
     browser.runtime.sendMessage(
       {
         type: "setSettings",
         payload: {
           value: switchOption === "on",
-          settings: host ?? "power"
+          settings: host + "_settings_on_off"
         }
       },
       (result) => {
@@ -102,11 +121,9 @@ checkbox.addEventListener("change", (event) => {
   if (checked) {
     status.innerHTML = "UP";
     document.querySelector(".main.container").style.display = "flex";
-    document.querySelectorAll("#settings-on-off option")[0].setAttribute("selected", "selected");
   } else {
     status.innerHTML = "DOWN";
     document.querySelector(".main.container").style.display = "none";
-    document.querySelectorAll("#settings-on-off option")[1].setAttribute("selected", "selected");
   }
   reloadBtn.classList.remove("hide");
   getCurrentTabHostName().then((host) => {

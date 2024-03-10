@@ -63801,6 +63801,16 @@ var hvf = {
       });
     });
   },
+  onOffOnlySite: async function() {
+    return await new Promise((resolve, reject) => {
+      browser.runtime.sendMessage({
+        type: "getSettings",
+        settingsKey: window.location.host + "_settings_on_off"
+      }).then((value) => {
+        resolve(value);
+      });
+    });
+  },
   getImageBase64: async function(imgUrl) {
     return await new Promise((resolve, reject) => {
       browser.runtime.sendMessage({
@@ -63878,7 +63888,9 @@ var hvf = {
     try {
       console.log("init function called");
       const power = await this.getSettings();
-      if (!power) {
+      const onOffOnlySite = await this.onOffOnlySite();
+      console.log({ power, onOffOnlySite });
+      if (!power || !onOffOnlySite) {
         document.body.classList.add("hvf-extension-power-off");
         document.body.classList.add("hvf-show-website");
         return;
