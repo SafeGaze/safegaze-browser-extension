@@ -1,0 +1,66 @@
+{
+  "manifest_version": 2,
+  "name": "SafeGaze - Blur Haram Images, Block Ads, Block 5.5m Haram website, Block haram Search, Restricted Youtube",
+  "version": "1.2.0",
+  "description": "SafeGaze detects and masks potentially haram & sensitive contents in your browser.",
+  "background": {
+    "scripts": ["background/index.js"],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_popup": "settings/popup.html",
+    "default_icon": {
+      "16": "logo/sg-logo-only.png",
+      "32": "logo/sg-logo-only.png",
+      "48": "logo/sg-logo-only.png",
+      "128": "logo/sg-logo-only.png"
+    }
+  },
+  "icons": {
+    "16": "logo/sg-logo-only.png",
+    "32": "logo/sg-logo-only.png",
+    "48": "logo/sg-logo-only.png",
+    "128": "logo/sg-logo-only.png"
+  },
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "<all_urls>",
+    "declarativeNetRequest"
+  ],
+
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "youtube_safe_search_ruleset",
+        "enabled": true,
+        "path": "netRequestRules/youtube.json"
+      },
+      {
+        "id": "google_safe_search_ruleset",
+        "enabled": true,
+        "path": "netRequestRules/google.json"
+      },
+      {
+        "id": "ad_hosts",
+        "enabled": true,
+        "path": "netRequestRules/ad_hosts.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    "<all_urls>",
+    "blockedPage/*",
+    "checkSuccessPage/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/index.js", "scripts/checkAllowed.js"],
+      "css": ["content/style.css"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ]
+}

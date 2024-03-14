@@ -1,8 +1,16 @@
+import { blockList } from "./blockList.js";
+import { ignoreList } from "./ignoreList";
+import remoteAnalyzer from "../background/media-processor/remoteAnalyzer.js";
+
+require("@tensorflow/tfjs-backend-cpu");
+require("@tensorflow/tfjs-backend-webgl");
+const cocoSsd = require("@tensorflow-models/coco-ssd");
+
 const hvf = {
   domObjectIndex: 0,
   interval: null,
 
-  maxRenderItem: 2,
+  maxRenderItem: 1,
 
   ignoreImageSize: 40,
 
@@ -21,6 +29,46 @@ const hvf = {
         .then((value) => {
           clearTimeout(timeoutId);
           resolve(value);
+        });
+    });
+  },
+
+  getOpacity: async function () {
+    return await new Promise((resolve, reject) => {
+      chrome.runtime
+        .sendMessage({
+          type: "getSettings",
+          settingsKey: window.location.host + "_opacity",
+        })
+        .then((value) => {
+          resolve(value);
+        });
+    });
+  },
+  onOffOnlySite: async function () {
+    return await new Promise((resolve, reject) => {
+      chrome.runtime
+        .sendMessage({
+          type: "getSettings",
+          settingsKey: window.location.host + "_settings_on_off",
+        })
+        .then((value) => {
+          resolve(value);
+        });
+    });
+  },
+
+  getImageBase64: async function (imgUrl) {
+    return await new Promise((resolve, reject) => {
+      chrome.runtime
+        .sendMessage({
+          action: "CONVERT-IMAGE-TO-BASE64",
+          imgUrl,
+        })
+        .then((value) => {
+          if (value?.complete) {
+            resolve(value);
+          }
         });
     });
   },
@@ -48,16 +96,114 @@ const hvf = {
     return regex.test(imageSrc);
   },
 
+  openNewTabWithMessage() {
+    chrome.tabs.create({ url: "about:blank" }, function (tab) {
+      chrome.tabs.sendMessage(tab.id, { message: "Hello from content.js!" });
+    });
+  },
+
+  // detect images
+  async objectDetection(img) {
+    try {
+      // Load the model.
+      const model = await cocoSsd.load();
+
+      // Classify the image.
+      const predictions = await model.detect(img);
+
+      const foundPerson = predictions.find((pred) => pred.class === "person");
+      return !!foundPerson;
+    } catch (error) {
+      console.log("error on detecting image", error);
+      return false;
+    }
+  },
+
+  async imageURLToBase64(url) {
+    try {
+      const imageUrlWithCors = `${url}`;
+
+      // Fetch the image
+      const response = await fetch(imageUrlWithCors, {
+        method: "GET", // POST, PUT, DELETE, etc.
+        headers: {
+          // the content type header value is usually auto-set
+          // depending on the request body
+          "Content-Type": "application/json;charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      const blob = await response.blob();
+
+      // Convert the blob to base64
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Error converting image to base64:", error);
+      throw error;
+    }
+  },
+
   // Initialize the extension
   init: async function () {
     try {
       console.log("init function called");
       const power = await this.getSettings();
+      const onOffOnlySite = await this.onOffOnlySite();
 
       // console.log(power);
-      if (!power) {
+      if (!power || !onOffOnlySite) {
+        document.body.classList.add("hvf-extension-power-off");
+        document.body.classList.add("hvf-show-website");
+
+        return;
+      }
+
+      const domain = window.location.hostname.replace("www.", "");
+
+      if (blockList.includes(domain)) {
+        console.log("blocking the domain", domain);
+        chrome.runtime.sendMessage({ message: "openNewTab" });
         document.body.classList.add("hvf-extension-power-off");
         return;
+      }
+
+      document.body.classList.add("hvf-show-website");
+
+      if (ignoreList.includes(domain)) {
+        console.log(`Ignoring this domain ${domain}`);
+        document.body.classList.add("hvf-extension-power-off");
+
+        return;
+      }
+
+      if (!document.getElementById("opacity-style")) {
+        const getOpacity = await this.getOpacity();
+
+        console.log({ getOpacity });
+
+        var styles = `
+            body:not(.hvf-extension-power-off) img:not(.hvf-invalid-img),
+            body:not(.hvf-extension-power-off) image:not(.hvf-invalid-img) {
+              filter: blur(${
+                getOpacity !== true &&
+                getOpacity !== false &&
+                Number.isInteger(Number(getOpacity))
+                  ? getOpacity
+                  : 15
+              }px) !important;
+            }
+      `;
+        var styleSheet = document.createElement("style");
+        styleSheet.id = "opacity-style";
+        styleSheet.innerText = styles;
+        document.body.append(styleSheet);
       }
 
       document.body.classList.add("hvf-extension-loaded");
@@ -85,6 +231,7 @@ const hvf = {
           .classList.contains("hvf-extension-power-off")
       ) {
         console.log("initial load failed!");
+        document.body.classList.add("hvf-show-website");
 
         document.body.classList.add("hvf-extension-power-off");
       }
@@ -258,7 +405,8 @@ const hvf = {
         this.isElementInViewport(media[i]) === false ||
         (!hasBackgroundImage &&
           media[i].tagName !== "IMG" &&
-          media[i].tagName !== "image")
+          media[i].tagName !== "image") ||
+        this.isDataSrcImage(media[i].src)
       ) {
         continue;
       }
@@ -268,7 +416,9 @@ const hvf = {
         media[i].getBoundingClientRect();
       if (
         imageWidth <= this.ignoreImageSize ||
-        imageHeight <= this.ignoreImageSize
+        imageHeight <= this.ignoreImageSize ||
+        media[i].id.includes("captcha") ||
+        media[i].classList.contains("captcha")
       ) {
         media[i].classList.add("hvf-ignored-image");
         continue;
@@ -286,7 +436,7 @@ const hvf = {
         url = backgroundImageUrl;
       }
 
-      if (url.startsWith("https://cdn.safegaze.com/annotated_image/")) {
+      if (url.startsWith("https://images.safegaze.com/annotated_image/")) {
         media[i].classList.add("hvf-analyzed");
         media[i].classList.remove("hvf-analyzing");
         continue;
@@ -339,7 +489,8 @@ const hvf = {
           loader.classList.add("hvf-analyzed-loader-el");
         }
 
-        let payload = {
+        const that = this;
+        let data = {
           mediaUrl: url,
           mediaType:
             hasBackgroundImage &&
@@ -353,20 +504,123 @@ const hvf = {
           maskedUrl: null,
         };
 
-        chrome.runtime.sendMessage(
-          {
-            action: "HVF-MEDIA-ANALYSIS-REQUEST",
-            payload: payload,
-          },
-          (result) => {
-            if (!chrome.runtime.lastError) {
-              // message processing code goes here
-            } else {
-              // error handling code goes here
-            }
+        let analyzer = new remoteAnalyzer(data);
+
+        (async function () {
+          const result = await that.getImageBase64(media[i].src);
+          const base64Image = result.result;
+          const imgElement = document.createElement("img");
+
+          // Set base64 as src
+          imgElement.src = base64Image;
+          imgElement.crossOrigin = "anonymous";
+
+          const detectPerson = await that.objectDetection(imgElement);
+          if (!detectPerson) {
+            media[i].classList.add("hvf-ignored-image");
+            media[i].classList.add("hvf-human-not-included");
+
+            return;
           }
-        );
+
+          if (media[i].classList.contains("hvf-could-not-processed-img")) {
+            data.mediaUrl = base64Image;
+          }
+
+          analyzer
+            .analyze()
+            .then((result) => {
+              console.log("Media analysis complete");
+
+              if (result.invalidMedia) {
+                media[i].classList.remove("hvf-analyzed");
+                media[i].classList.remove("hvf-analyzing");
+                media[i].classList.remove("hvf-invalid");
+                media[i].classList.add("hvf-could-not-processed-img");
+                that.triggerScanning();
+                return;
+              }
+              media[i].classList.remove("hvf-could-not-processed-img");
+
+              that.receiveMediaV2({
+                payload: Object.assign(data, result),
+              });
+
+              chrome.runtime.sendMessage(
+                {
+                  action: "HVF-TOTAL-COUNT",
+                  activate: result?.activate,
+                },
+                (result) => {
+                  if (!chrome.runtime.lastError) {
+                    // message processing code goes here
+                  } else {
+                    // error handling code goes here
+                  }
+                }
+              );
+            })
+            .catch((err) => {
+              console.log("Error analyzing media");
+              console.log(err);
+            });
+        })();
+
+        // chrome.runtime.sendMessage(
+        //   {
+        //     action: "HVF-MEDIA-ANALYSIS-REQUEST",
+        //     payload: payload,
+        //   },
+        //   (result) => {
+        //     if (!chrome.runtime.lastError) {
+        //       // message processing code goes here
+        //     } else {
+        //       // error handling code goes here
+        //     }
+        //   }
+        // );
       }
+    }
+  },
+
+  receiveMediaV2: function (message) {
+    let index = message.payload.domObjectIndex;
+    let media = document.querySelector(".hvf-dom-id-" + index);
+
+    // console.log(message.payload);
+
+    let srcAttr = message.payload.srcAttr;
+    let mediaUrl = message.payload.mediaUrl;
+
+    if (!media) return;
+
+    if (message.payload.shouldMask && message.payload.maskedUrl) {
+      // reset the image before replacing the masked url
+      media.setAttribute(srcAttr, "");
+      media.style.backgroundImage = "";
+
+      media.classList.add("hvf-masked");
+      if (message.payload.mediaType === "backgroundImage") {
+        media.style.backgroundImage = `url(${message.payload.maskedUrl})`;
+      } else {
+        // media.setAttribute(srcAttr, this.blankThumbnail());
+        media.setAttribute(srcAttr, message.payload.maskedUrl);
+        media.removeAttribute("srcset");
+      }
+      media.setAttribute("data-hvf-original-url", mediaUrl);
+    }
+
+    if (message.payload.invalidMedia === true) {
+      media.classList.add("hvf-invalid");
+    } else {
+      media.classList.add("hvf-analyzed");
+      media.classList.remove("hvf-invalid");
+    }
+    media.classList.remove("hvf-analyzing");
+
+    let renderCycle = media.getAttribute("hvf-render-cycle") || 0;
+    if (!message.payload.invalidMedia || renderCycle > this.maxRenderItem) {
+      this.removeImageLoader(media);
     }
   },
 

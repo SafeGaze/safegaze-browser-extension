@@ -10,14 +10,16 @@ var remoteAnalyzer = class {
   };
   analyze = async () => {
     let annotatedData;
-    if (this.data.mediaUrl.startsWith("https://cdn.safegaze.com/annotated_image/")) {
+    if (this.data.mediaUrl.startsWith(
+      "https://images.safegaze.com/annotated_image/"
+    )) {
       return {
         shouldMask: true,
         maskedUrl: this.data.mediaUrl
       };
     }
     try {
-      let relativeFilePath = this.relativeFilePath(this.data.mediaUrl);
+      let relativeFilePath = await this.relativeFilePath(this.data.mediaUrl);
       if (await this.urlExists(relativeFilePath)) {
         console.log("url exists");
         return {
@@ -46,30 +48,11 @@ var remoteAnalyzer = class {
         invalidMedia: true
       };
     }
-    chrome.storage.local.get("safe_gaze_total_counts").then((count) => {
-      chrome.storage.local.set({
-        safe_gaze_total_counts: count?.safe_gaze_total_counts ? count?.safe_gaze_total_counts + 1 : 1
-      }).then(() => {
-        console.log("Value is set for total count remoteanalyzer");
-      });
-    }).catch((error) => {
-      console.log("total count error error remoteanalyzer", error);
-    });
-    this.getCurrentTabHostName().then(async (host) => {
-      const settings_key = host + "_counts";
-      const count = await chrome.storage.local.get(settings_key);
-      chrome.storage.local.set({
-        [settings_key]: count?.[settings_key] ? count?.[settings_key] + 1 : 1
-      }).then(() => {
-        console.log("Value is set for each website remoteanalyzer");
-      });
-    }).catch((error) => {
-      console.log("error on current tab remoteanalyzer", error);
-    });
     let maskedUrl = annotatedData.media[0].processed_media_url;
     return {
       shouldMask: true,
-      maskedUrl
+      maskedUrl,
+      activate: true
     };
   };
   getAnnotatedMedia = async (url) => {
@@ -116,26 +99,22 @@ var remoteAnalyzer = class {
     }).catch(() => ({ ok: false }));
     return response.ok;
   };
-  relativeFilePath = (originalMediaUrl) => {
-    let url = decodeURIComponent(originalMediaUrl);
-    let urlParts = url.split("?");
-    let protocolStrippedUrl = urlParts[0].replace(/http:\/\//, "").replace(/https:\/\//, "").replace(/--/g, "__").replace(/%/g, "_");
-    let queryParams = urlParts[1] !== void 0 ? urlParts[1].replace(/,/g, "_").replace(/=/g, "_").replace(/&/g, "/") : "";
-    let relativeFolder = protocolStrippedUrl.split("/").slice(0, -1).join("/");
-    if (queryParams.length) {
-      relativeFolder = `${relativeFolder}/${queryParams}`;
+  relativeFilePath = async (originalMediaUrl) => {
+    const hash = await this.sha256(originalMediaUrl);
+    let newUrl = `https://images.safegaze.com/annotated_image/${hash}/image.png`;
+    return newUrl;
+  };
+  sha256 = async (str) => {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+      return hashHex;
+    } catch (error) {
+      return "";
     }
-    let filenameWithExtension = protocolStrippedUrl.split("/").pop();
-    let filenameParts = filenameWithExtension.split(".");
-    let filename, extension;
-    if (filenameParts.length >= 2) {
-      filename = filenameParts.slice(0, -1).join(".");
-      extension = filenameParts.pop();
-    } else {
-      filename = filenameParts[0].length ? filenameParts[0] : "image";
-      extension = "jpg";
-    }
-    return `https://cdn.safegaze.com/annotated_image/${relativeFolder}/${filename}.${extension}`;
   };
 };
 var remoteAnalyzer_default = remoteAnalyzer;
@@ -318,4 +297,62 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;
   }
+});
+
+// src/background/index.js
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.message === "openNewTab") {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      const tab = tabs[0];
+      chrome.tabs.update(tab.id, { url: chrome.runtime.getURL("block.html") });
+    });
+  }
+});
+var getCurrentTabHostName2 = async () => {
+  const tabs = await chrome.tabs.query({ active: true });
+  const { hostname } = new URL(tabs?.[0]?.url ?? "");
+  return hostname;
+};
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "CONVERT-IMAGE-TO-BASE64") {
+    fetch(request.imgUrl).then(async (response) => {
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        sendResponse({
+          complete: true,
+          result: reader.result
+        });
+      };
+      reader.readAsDataURL(blob);
+    });
+    return true;
+  }
+});
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "HVF-TOTAL-COUNT" && message.activate === true) {
+    chrome.storage.local.get("safe_gaze_total_counts").then((count) => {
+      chrome.storage.local.set({
+        safe_gaze_total_counts: count?.safe_gaze_total_counts ? count?.safe_gaze_total_counts + 1 : 1
+      }).then(() => {
+        console.log("Value is set for total count remoteanalyzer");
+      });
+    }).catch((error) => {
+      console.log("total count error error remoteanalyzer", error);
+    });
+    getCurrentTabHostName2().then(async (host) => {
+      const settings_key = host + "_counts";
+      const count = await chrome.storage.local.get(settings_key);
+      chrome.storage.local.set({
+        [settings_key]: count?.[settings_key] ? count?.[settings_key] + 1 : 1
+      }).then(() => {
+        console.log("Value is set for each website remoteanalyzer");
+      });
+    }).catch((error) => {
+      console.log("error on current tab remoteanalyzer", error);
+    });
+  }
+});
+chrome.runtime.onStartup.addListener(() => {
+  chrome.storage.local.clear();
 });
