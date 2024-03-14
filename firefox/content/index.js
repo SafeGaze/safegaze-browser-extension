@@ -63889,7 +63889,6 @@ var hvf = {
       console.log("init function called");
       const power = await this.getSettings();
       const onOffOnlySite = await this.onOffOnlySite();
-      console.log({ power, onOffOnlySite });
       if (!power || !onOffOnlySite) {
         document.body.classList.add("hvf-extension-power-off");
         document.body.classList.add("hvf-show-website");
@@ -63945,7 +63944,7 @@ var hvf = {
   isElementInViewport: function(el) {
     let rect = el.getBoundingClientRect();
     let result = rect.top >= 0 && rect.left >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
-    return true;
+    return result;
   },
   throttleWaiting: false,
   // Initially, we're not waiting
@@ -64046,7 +64045,7 @@ var hvf = {
       if (!hasBackgroundImage && media[i].tagName !== "image" && media[i].tagName !== "IMG") {
         media[i].classList.add("hvf-dom-checked");
       }
-      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isDataSrcImage(media[i].src)) {
+      if (media[i].classList.contains("hvf-unidentified-error") || media[i].classList.contains("hvf-too-many-render") || media[i].classList.contains("hvf-analyzing") || media[i].classList.contains("hvf-analyzed") || this.isElementInViewport(media[i]) === false || !hasBackgroundImage && media[i].tagName !== "IMG" && media[i].tagName !== "image" || this.isDataSrcImage(media[i].src)) {
         continue;
       }
       const { width: imageWidth, height: imageHeight } = media[i].getBoundingClientRect();

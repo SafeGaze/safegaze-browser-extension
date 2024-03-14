@@ -157,8 +157,6 @@ const hvf = {
       const power = await this.getSettings();
       const onOffOnlySite = await this.onOffOnlySite();
 
-      console.log({ power, onOffOnlySite });
-
       // console.log(power);
       if (!power || !onOffOnlySite) {
         document.body.classList.add("hvf-extension-power-off");
@@ -251,7 +249,7 @@ const hvf = {
 
     // console.log(result);
 
-    return true;
+    return result;
   },
 
   throttleWaiting: false, // Initially, we're not waiting
@@ -404,6 +402,7 @@ const hvf = {
         media[i].classList.contains("hvf-too-many-render") ||
         media[i].classList.contains("hvf-analyzing") ||
         media[i].classList.contains("hvf-analyzed") ||
+        this.isElementInViewport(media[i]) === false ||
         (!hasBackgroundImage &&
           media[i].tagName !== "IMG" &&
           media[i].tagName !== "image") ||
