@@ -412,8 +412,14 @@ const hvf = {
       }
 
       // ignore if images are less than 48*48
+
       const { width: imageWidth, height: imageHeight } =
         media[i].getBoundingClientRect();
+
+      if (imageWidth == 0 || imageHeight == 0) {
+        continue;
+      }
+
       if (
         imageWidth <= this.ignoreImageSize ||
         imageHeight <= this.ignoreImageSize ||
