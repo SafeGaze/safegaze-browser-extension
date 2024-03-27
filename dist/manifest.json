@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "SafeGaze - Blur Haram Images, Block Ads, Block 5.5m Haram website, Block haram Search, Restricted Youtube",
-  "version": "1.2.0",
+  "name": "SafeGaze - Blur Haram Images",
+  "version": "1.5.1",
   "description": "SafeGaze detects and masks potentially haram & sensitive contents in your browser.",
   "background": {
     "service_worker": "background/index.js",
