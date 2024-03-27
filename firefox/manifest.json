@@ -22,42 +22,12 @@
     "48": "logo/sg-logo-only.png",
     "128": "logo/sg-logo-only.png"
   },
-  "permissions": [
-    "tabs",
-    "activeTab",
-    "storage",
-    "<all_urls>",
-    "declarativeNetRequest"
-  ],
+  "permissions": ["tabs", "activeTab", "storage", "<all_urls>"],
 
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "youtube_safe_search_ruleset",
-        "enabled": true,
-        "path": "netRequestRules/youtube.json"
-      },
-      {
-        "id": "google_safe_search_ruleset",
-        "enabled": true,
-        "path": "netRequestRules/google.json"
-      },
-      {
-        "id": "ad_hosts",
-        "enabled": true,
-        "path": "netRequestRules/ad_hosts.json"
-      }
-    ]
-  },
-  "web_accessible_resources": [
-    "<all_urls>",
-    "blockedPage/*",
-    "checkSuccessPage/*"
-  ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content/index.js", "scripts/checkAllowed.js"],
+      "js": ["content/index.js"],
       "css": ["content/style.css"],
       "run_at": "document_end",
       "all_frames": true
